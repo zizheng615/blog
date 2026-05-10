@@ -277,41 +277,89 @@ docker-compose up -d
 docker-compose restart
 ```
 
-### 5. 绑定域名 + HTTPS（推荐）
+### 5. 绑定域名 + HTTPS
 
-如果有域名且已备案（或免备案）：
+#### 购买域名（推荐）
+
+| 平台 | .com 价格 | .cn 价格 |  cheapest |
+|------|-----------|----------|-----------|
+| 阿里云 | ~69元/年 | ~35元/年 | .top ~12元/年 |
+| 腾讯云 | ~69元/年 | ~35元/年 | .xyz ~12元/年 |
+| Namecheap | ~$10/年 | - | - |
+
+> 最便宜的 `.top` 或 `.xyz` 域名约 10-20元/年，足够个人博客使用。
+
+**操作步骤**：
+1. 在阿里云/腾讯云购买域名
+2. 进入 **域名解析** 控制台
+3. 添加两条 A 记录：
+   - `主机记录: @` → `记录值: 你的服务器IP`
+   - `主机记录: www` → `记录值: 你的服务器IP`
+4. 等待 DNS 生效（通常几分钟到几小时）
+
+#### 配置 HTTPS（Let's Encrypt 免费证书）
+
+**一键配置（推荐）：**
 
 ```bash
-# 安装 Nginx（宿主机）
-sudo apt install nginx -y
+# 在服务器项目目录执行
+chmod +x scripts/setup-ssl.sh
+sudo ./scripts/setup-ssl.sh yourdomain.com
+```
 
-# 修改 frontend/nginx.conf 中的 server_name
-server_name yourdomain.com www.yourdomain.com;
+这个脚本会自动完成：
+- 安装 Nginx
+- 安装 Certbot
+- 复制配置文件
+- 申请并安装 SSL 证书
+- 设置证书自动续期
 
-# 使用 Certbot 申请免费 SSL 证书
-sudo apt install certbot python3-certbot-nginx -y
+**手动配置：**
+
+```bash
+# 1. 安装 Nginx + Certbot
+sudo apt update
+sudo apt install -y nginx certbot python3-certbot-nginx
+
+# 2. 复制配置文件
+sudo cp nginx/blog.conf /etc/nginx/conf.d/blog.conf
+sudo sed -i 's/yourdomain.com/yourdomain.com/g' /etc/nginx/conf.d/blog.conf
+
+# 3. 测试配置
+sudo nginx -t
+
+# 4. 申请证书
 sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+
+# 5. 启动 Nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
 ```
 
-或使用 Docker 部署 Nginx 反向代理 + HTTPS：
+**证书自动续期**（已默认配置）：
+```bash
+# 查看续期状态
+sudo certbot certificates
 
-```yaml
-# 在 docker-compose.yml 中添加
-  nginx:
-    image: nginx:alpine
-    container_name: blog-nginx
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - frontend
-    networks:
-      - blog-network
+# 手动测试续期
+sudo certbot renew --dry-run
+
+# 查看定时任务
+sudo systemctl status certbot.timer
 ```
+
+#### 访问验证
+
+配置完成后：
+- `http://yourdomain.com` → 自动跳转到 HTTPS
+- `https://yourdomain.com` → 博客首页
+- `https://yourdomain.com/api/...` → 后端 API
+
+#### 不使用域名（仅 IP + 自签名证书）
+
+如果暂时不买域名，可以：
+- 直接用 `http://服务器IP` 访问（HTTP，无加密）
+- 或配置自签名证书（浏览器会提示不安全，不推荐）
 
 ### 6. 常用维护命令
 
@@ -388,8 +436,11 @@ D:\Blog
 │   ├── nginx.conf         # Nginx 生产配置
 │   ├── .env.production    # 生产环境变量
 │   └── package.json
+├── nginx/             # Nginx 配置文件
+│   └── blog.conf          # HTTPS 反向代理配置
 ├── scripts/           # 部署脚本
-│   └── docker-redeploy.sh # Docker 热更新脚本
+│   ├── docker-redeploy.sh # Docker 热更新脚本
+│   └── setup-ssl.sh       # 一键 HTTPS 配置脚本
 ├── docker-compose.yml # Docker 一键部署
 ├── .env.example       # Docker 环境变量模板
 └── README.md
