@@ -1,0 +1,11 @@
+# 容器内构建,排除本地编译产物和 IDE 文件
+target
+*.log
+backend.log
+.idea
+.vscode
+*.iml
+.git
+.gitignore
+README.md
+cp.txt

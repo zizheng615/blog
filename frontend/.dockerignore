@@ -1,14 +1,11 @@
-# 本地预构建后只把 dist/ + nginx.conf 送入镜像，其它一概排除
+# 容器内多阶段构建,排除不需要进上下文的内容
 node_modules
-src
-public
+dist
 .vscode
 .idea
 .git
 .gitignore
 *.log
+frontend.log
 .env*
 README.md
-package*.json
-vite.config.js
-index.html
