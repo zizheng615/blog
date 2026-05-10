@@ -20,12 +20,12 @@ FROM nginx:alpine
 # 复制自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 复制构建产物
-COPY --from=builder /app/dist /usr/share/nginx/html
+# 复制构建产物到 /blog 子目录（与 vite.config.js 的 base: '/blog/' 保持一致）
+COPY --from=builder /app/dist /usr/share/nginx/html/blog
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost/ > /dev/null || exit 1
+    CMD wget -qO- http://localhost/nginx-health > /dev/null || exit 1
 
 EXPOSE 80
 
