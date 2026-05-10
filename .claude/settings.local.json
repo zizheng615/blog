@@ -40,7 +40,8 @@
       "Bash(wmic process *)",
       "Bash(echo \"Started with PID $!\")",
       "Bash(mvn dependency:tree)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(npm install *)"
     ]
   }
 }

@@ -10,6 +10,14 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+  optimizeDeps: {
+    exclude: ['emoji-picker-element'],
+  },
   server: {
     port: 5173,
     proxy: {

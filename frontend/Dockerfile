@@ -2,7 +2,7 @@
 # 多阶段构建：先构建静态文件，再用 Nginx 托管
 
 # 阶段1：构建
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
