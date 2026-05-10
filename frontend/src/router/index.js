@@ -18,6 +18,7 @@ const routes = [
       { path: '', redirect: '/admin/dashboard' },
       { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/views/admin/DashboardView.vue') },
       { path: 'comments', name: 'AdminComments', component: () => import('@/views/admin/CommentManageView.vue') },
+      { path: 'account', name: 'AdminAccount', component: () => import('@/views/admin/AccountView.vue') },
     ],
   },
 ]

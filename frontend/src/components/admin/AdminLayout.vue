@@ -22,6 +22,10 @@
             <el-icon><ChatDotRound /></el-icon>
             <span>评论管理</span>
           </el-menu-item>
+          <el-menu-item index="/admin/account">
+            <el-icon><Lock /></el-icon>
+            <span>账号设置</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
       <el-container>
