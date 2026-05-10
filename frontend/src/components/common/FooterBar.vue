@@ -1,0 +1,140 @@
+<template>
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <h4>友链</h4>
+        <div class="friend-links">
+          <a v-for="link in friendLinks" :key="link.id" :href="link.url" target="_blank" class="friend-link">
+            {{ link.name }}
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-section">
+        <h4>关注我</h4>
+        <div class="social-links">
+          <a href="https://github.com" target="_blank" class="social-link">
+            <el-icon><Platform /></el-icon> GitHub
+          </a>
+          <a href="https://www.bilibili.com" target="_blank" class="social-link">
+            <el-icon><VideoPlay /></el-icon> B站
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-section">
+        <h4>访客统计</h4>
+        <div class="stats">
+          <span>总PV: {{ stats.totalPv || 0 }}</span>
+          <span>总UV: {{ stats.totalUv || 0 }}</span>
+          <span>今日PV: {{ stats.todayPv || 0 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="copyright">
+      © 2024 我的博客 | 用 ❤ 构建
+    </div>
+  </footer>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { getFriendLinks } from '@/api/friendLink'
+import { getVisitorStats } from '@/api/visitor'
+
+const friendLinks = ref([])
+const stats = ref({})
+
+onMounted(async () => {
+  try {
+    friendLinks.value = await getFriendLinks()
+    stats.value = await getVisitorStats()
+  } catch (e) {
+    console.error(e)
+  }
+})
+</script>
+
+<style lang="scss" scoped>
+.footer {
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding: 40px 0 20px;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.footer-section {
+  h4 {
+    font-size: 1.1em;
+    margin-bottom: 16px;
+    color: #fff;
+  }
+}
+
+.friend-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.friend-link {
+  color: #bdc3c7;
+  font-size: 0.9em;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #3498db;
+  }
+}
+
+.social-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #bdc3c7;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #3498db;
+  }
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9em;
+  color: #bdc3c7;
+}
+
+.copyright {
+  text-align: center;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #34495e;
+  font-size: 0.85em;
+  color: #95a5a6;
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+</style>

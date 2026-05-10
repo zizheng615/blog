@@ -1,0 +1,100 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build backend
+        run: |
+          cd backend
+          mvn clean package -DskipTests -q
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Deploy to server via SSH
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "backend/target/blog-backend-1.0.0.jar,frontend/dist/"
+          target: ${{ secrets.SERVER_DEPLOY_PATH }}
+          strip_components: 0
+
+      - name: Restart services on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            DEPLOY_PATH=${{ secrets.SERVER_DEPLOY_PATH }}
+            cd $DEPLOY_PATH
+
+            # 停止旧的后端进程
+            PID=$(pgrep -f "blog-backend-1.0.0.jar" || true)
+            if [ -n "$PID" ]; then
+              echo "Stopping old backend (PID: $PID)"
+              kill "$PID"
+              sleep 5
+            fi
+
+            # 确保旧进程已停止
+            PID=$(pgrep -f "blog-backend-1.0.0.jar" || true)
+            if [ -n "$PID" ]; then
+              echo "Force killing old backend (PID: $PID)"
+              kill -9 "$PID"
+            fi
+
+            # 复制前端 dist 到 Nginx 目录
+            sudo cp -r frontend/dist/* /var/www/blog/
+            sudo nginx -t && sudo systemctl reload nginx
+
+            # 启动新后端
+            nohup java -jar backend/target/blog-backend-1.0.0.jar \
+              --spring.profiles.active=prod \
+              > $DEPLOY_PATH/app.log 2>&1 &
+
+            # 等待启动
+            sleep 15
+
+            # 健康检查
+            for i in {1..10}; do
+              if curl -sf http://localhost:8080/api/v1/articles > /dev/null; then
+                echo "Deployment successful!"
+                exit 0
+              fi
+              echo "Health check attempt $i/10..."
+              sleep 3
+            done
+
+            echo "Deployment failed - backend did not start"
+            tail -50 $DEPLOY_PATH/app.log
+            exit 1

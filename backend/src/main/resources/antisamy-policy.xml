@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<anti-samy-rules>
+  <policy>
+    <common-regexps>
+      <regexp name="htmlTitle" value="[\p{L}\p{N}\s\-_',:\[\]!\./\(\)]*"/>
+      <regexp name="number" value="^-?((\d+)|(\d*\.\d+)|(\d+\.\d*))$"/>
+      <regexp name="integer" value="^-?\d+$"/>
+      <regexp name="positiveInteger" value="^\d+$"/>
+      <regexp name="colorName" value="aqua|black|blue|fuchsia|gray|grey|green|lime|maroon|navy|olive|purple|red|silver|teal|white|yellow"/>
+      <regexp name="colorCode" value="^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$"/>
+      <regexp name="paragraph" value="[\p{L}\p{N}\s\-_',:\[\]!\./\(\)]*"/>
+      <regexp name="boolean" value="^(true|false)$"/>
+    </common-regexps>
+    <common-attributes>
+      <attribute name="lang"><regexp-list><regexp name="[a-zA-Z]{2,20}"/></regexp-list></attribute>
+      <attribute name="title"><regexp-list><regexp name="paragraph"/></regexp-list></attribute>
+      <attribute name="id"><regexp-list><regexp name="[a-zA-Z0-9\-_]+"/></regexp-list></attribute>
+      <attribute name="class"><regexp-list><regexp name="[a-zA-Z0-9\-_\s]+"/></regexp-list></attribute>
+      <attribute name="style"><regexp-list><regexp name="[a-zA-Z0-9\-\s:;#%(),.'\"]+"/></regexp-list></attribute>
+    </common-attributes>
+    <global-tag-attributes>
+      <attribute name="title"/><attribute name="class"/><attribute name="id"/><attribute name="lang"/><attribute name="style"/>
+    </global-tag-attributes>
+    <tags>
+      <tag name="p" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="div" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="span" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="h1" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="h2" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="h3" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="h4" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="h5" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="h6" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="br" action="remove"/>
+      <tag name="hr" action="remove"/>
+      <tag name="a" action="validate">
+        <attribute name="href"><regexp-list><regexp name="offsiteURL"/></regexp-list></attribute>
+        <attribute name="title"/><attribute name="class"/><attribute name="style"/>
+        <attribute name="target"><literal-list><literal value="_blank"/><literal value="_self"/></literal-list></attribute>
+      </tag>
+      <tag name="img" action="validate">
+        <attribute name="src"><regexp-list><regexp name="offsiteURL"/></regexp-list></attribute>
+        <attribute name="alt"/><attribute name="title"/><attribute name="class"/><attribute name="style"/>
+        <attribute name="width"><regexp-list><regexp name="positiveInteger"/></regexp-list></attribute>
+        <attribute name="height"><regexp-list><regexp name="positiveInteger"/></regexp-list></attribute>
+      </tag>
+      <tag name="strong" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="b" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="em" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="i" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="u" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="strike" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="s" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="ul" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="ol" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="li" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="blockquote" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="pre" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="code" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="table" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="thead" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="tbody" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="tr" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="th" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+      <tag name="td" action="validate"><attribute name="class"/><attribute name="style"/></tag>
+    </tags>
+  </policy>
+</anti-samy-rules>
