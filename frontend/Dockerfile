@@ -12,6 +12,7 @@ RUN npm install --registry=https://registry.npmmirror.com
 
 # 复制源码并构建
 COPY . .
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 # 阶段2：运行（Nginx）

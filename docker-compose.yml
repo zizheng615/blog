@@ -71,6 +71,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      shm_size: '1gb'
     image: blog-frontend:latest
     container_name: blog-frontend
     restart: always
