@@ -1,0 +1,14 @@
+# 本地预构建后只把 dist/ + nginx.conf 送入镜像，其它一概排除
+node_modules
+src
+public
+.vscode
+.idea
+.git
+.gitignore
+*.log
+.env*
+README.md
+package*.json
+vite.config.js
+index.html

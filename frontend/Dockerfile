@@ -1,28 +1,13 @@
-# 前端 Dockerfile - Vue 3 + Vite + Nginx
-# 多阶段构建：先构建静态文件，再用 Nginx 托管
+# 前端 Dockerfile - 直接将本地预构建好的 dist/ 拷贝进 Nginx
+# 构建在宿主机执行（npm run build），容器内只负责静态托管，不再走 Node 构建阶段。
 
-# 阶段1：构建
-FROM node:22-alpine AS builder
-
-WORKDIR /app
-
-# 先复制 package.json 缓存依赖层
-COPY package*.json ./
-RUN npm install --registry=https://registry.npmmirror.com
-
-# 复制源码并构建
-COPY . .
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN npm run build
-
-# 阶段2：运行（Nginx）
 FROM nginx:alpine
 
-# 复制自定义 Nginx 配置
+# 自定义 Nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# 复制构建产物到 /blog 子目录（与 vite.config.js 的 base: '/blog/' 保持一致）
-COPY --from=builder /app/dist /usr/share/nginx/html/blog
+# 复制本地构建产物到 /blog 子目录（与 vite.config.js 的 base: '/blog/' 对齐）
+COPY dist /usr/share/nginx/html/blog
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

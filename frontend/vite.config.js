@@ -14,16 +14,6 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
-    rollupOptions: {
-      maxParallelFileOps: 2,
-      output: {
-        manualChunks: {
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'element-plus': ['element-plus', '@element-plus/icons-vue'],
-          'editor': ['@wangeditor/editor', '@wangeditor/editor-for-vue'],
-        },
-      },
-    },
     chunkSizeWarningLimit: 2000,
   },
   optimizeDeps: {
