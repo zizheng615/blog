@@ -33,7 +33,7 @@
     </div>
 
     <div class="copyright">
-      LZZ's blog
+      © LZZ's blog
     </div>
   </footer>
 </template>
