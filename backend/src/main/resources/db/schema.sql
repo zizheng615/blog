@@ -119,6 +119,14 @@ CREATE TABLE IF NOT EXISTS `friend_link` (
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Site config table (contact info, etc.)
+CREATE TABLE IF NOT EXISTS `site_config` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
+    `config_key` VARCHAR(64) NOT NULL UNIQUE,
+    `config_value` VARCHAR(512),
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Insert seed data
 
 -- Admin user (password: admin123, BCrypt encoded)
@@ -265,8 +273,14 @@ INSERT INTO `comment` (`article_id`, `nickname`, `email`, `content`, `status`, `
 
 -- Friend Links
 INSERT INTO `friend_link` (`name`, `url`, `description`, `icon`, `sort_order`, `is_active`) VALUES
-('GitHub', 'https://github.com', '代码托管平台', 'github', 1, TRUE),
-('哔哩哔哩', 'https://www.bilibili.com', '年轻人的文化社区', 'bilibili', 2, TRUE),
+('GitHub', 'https://github.com/zizheng615', '代码托管平台', 'github', 1, TRUE),
+('哔哩哔哩', 'https://space.bilibili.com/291245814', '年轻人的文化社区', 'bilibili', 2, TRUE),
 ('Spring 官方', 'https://spring.io', 'Spring Framework 官方网站', 'spring', 3, TRUE),
 ('Vue.js', 'https://vuejs.org', '渐进式 JavaScript 框架', 'vue', 4, TRUE),
 ('MDN Web 文档', 'https://developer.mozilla.org', 'Web 开发者的权威参考', 'mdn', 5, TRUE);
+
+-- Site Config (default contact info)
+INSERT INTO `site_config` (`config_key`, `config_value`) VALUES
+('contact_email', '2788906816@qq.com'),
+('contact_github', 'https://github.com/zizheng615'),
+('contact_bilibili', 'https://space.bilibili.com/291245814');

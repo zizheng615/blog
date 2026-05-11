@@ -18,6 +18,8 @@ const routes = [
       { path: '', redirect: '/admin/dashboard' },
       { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/views/admin/DashboardView.vue') },
       { path: 'comments', name: 'AdminComments', component: () => import('@/views/admin/CommentManageView.vue') },
+      { path: 'friend-links', name: 'AdminFriendLinks', component: () => import('@/views/admin/FriendLinkManageView.vue') },
+      { path: 'contact', name: 'AdminContact', component: () => import('@/views/admin/ContactManageView.vue') },
       { path: 'account', name: 'AdminAccount', component: () => import('@/views/admin/AccountView.vue') },
     ],
   },

@@ -12,27 +12,61 @@
           <el-icon><Message /></el-icon>
           <div>
             <h4>邮箱</h4>
-            <p>admin@blog.com</p>
+            <a :href="`mailto:${email}`">{{ email }}</a>
           </div>
         </div>
         <div class="info-item">
           <el-icon><Platform /></el-icon>
           <div>
             <h4>GitHub</h4>
-            <a href="https://github.com" target="_blank">github.com</a>
+            <a :href="github" target="_blank">{{ githubLabel }}</a>
           </div>
         </div>
         <div class="info-item">
           <el-icon><VideoPlay /></el-icon>
           <div>
             <h4>哔哩哔哩</h4>
-            <a href="https://www.bilibili.com" target="_blank">bilibili.com</a>
+            <a :href="bilibili" target="_blank">{{ bilibiliLabel }}</a>
           </div>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { getSiteConfig } from '@/api/siteConfig'
+
+const DEFAULTS = {
+  contact_email: '2788906816@qq.com',
+  contact_github: 'https://github.com/zizheng615',
+  contact_bilibili: 'https://space.bilibili.com/291245814',
+}
+
+const config = ref({ ...DEFAULTS })
+
+const email = computed(() => config.value.contact_email || DEFAULTS.contact_email)
+const github = computed(() => config.value.contact_github || DEFAULTS.contact_github)
+const bilibili = computed(() => config.value.contact_bilibili || DEFAULTS.contact_bilibili)
+
+const stripProtocol = (url) =>
+  (url || '').replace(/^https?:\/\//, '').replace(/\/$/, '')
+
+const githubLabel = computed(() => stripProtocol(github.value))
+const bilibiliLabel = computed(() => stripProtocol(bilibili.value))
+
+onMounted(async () => {
+  try {
+    const data = await getSiteConfig()
+    if (data && typeof data === 'object') {
+      config.value = { ...DEFAULTS, ...data }
+    }
+  } catch (e) {
+    console.error(e)
+  }
+})
+</script>
 
 <style lang="scss" scoped>
 .contact {
@@ -92,6 +126,7 @@
   p, a {
     color: #409eff;
     font-size: 0.9em;
+    word-break: break-all;
   }
 }
 </style>

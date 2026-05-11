@@ -41,7 +41,20 @@
       "Bash(echo \"Started with PID $!\")",
       "Bash(mvn dependency:tree)",
       "Bash(git *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "Bash(docker info *)",
+      "Bash(python3 -c \"import bcrypt; print\\(bcrypt.hashpw\\(b'admin123', bcrypt.gensalt\\(10\\)\\).decode\\(\\)\\)\")",
+      "Bash(python -c \"import bcrypt; print\\(bcrypt.hashpw\\(b'admin123', bcrypt.gensalt\\(10\\)\\).decode\\(\\)\\)\")",
+      "Bash(python3 *)",
+      "Bash(mvn -q -DskipTests compile)",
+      "Bash(npm --prefix D:/Blog/frontend run build)",
+      "Bash(mvn -f D:/Blog/backend/pom.xml -DskipTests compile)",
+      "Bash(xargs grep -l \"upload\" -i)",
+      "Bash(mvn -q -DskipTests clean compile)",
+      "Bash(mvn -DskipTests compile)",
+      "Bash(mvn -DskipTests clean compile)"
     ]
   }
 }

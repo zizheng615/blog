@@ -13,10 +13,10 @@
       <div class="footer-section">
         <h4>关注我</h4>
         <div class="social-links">
-          <a href="https://github.com" target="_blank" class="social-link">
+          <a :href="github" target="_blank" class="social-link">
             <el-icon><Platform /></el-icon> GitHub
           </a>
-          <a href="https://www.bilibili.com" target="_blank" class="social-link">
+          <a :href="bilibili" target="_blank" class="social-link">
             <el-icon><VideoPlay /></el-icon> B站
           </a>
         </div>
@@ -39,17 +39,35 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getFriendLinks } from '@/api/friendLink'
 import { getVisitorStats } from '@/api/visitor'
+import { getSiteConfig } from '@/api/siteConfig'
+
+const DEFAULTS = {
+  contact_github: 'https://github.com/zizheng615',
+  contact_bilibili: 'https://space.bilibili.com/291245814',
+}
 
 const friendLinks = ref([])
 const stats = ref({})
+const siteConfig = ref({ ...DEFAULTS })
+
+const github = computed(() => siteConfig.value.contact_github || DEFAULTS.contact_github)
+const bilibili = computed(() => siteConfig.value.contact_bilibili || DEFAULTS.contact_bilibili)
 
 onMounted(async () => {
   try {
-    friendLinks.value = await getFriendLinks()
-    stats.value = await getVisitorStats()
+    const [links, visitorStats, config] = await Promise.all([
+      getFriendLinks().catch(() => []),
+      getVisitorStats().catch(() => ({})),
+      getSiteConfig().catch(() => ({})),
+    ])
+    friendLinks.value = links || []
+    stats.value = visitorStats || {}
+    if (config && typeof config === 'object') {
+      siteConfig.value = { ...DEFAULTS, ...config }
+    }
   } catch (e) {
     console.error(e)
   }

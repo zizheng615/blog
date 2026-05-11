@@ -23,6 +23,14 @@
             <el-icon><ChatDotRound /></el-icon>
             <span>评论管理</span>
           </el-menu-item>
+          <el-menu-item index="/admin/friend-links">
+            <el-icon><Link /></el-icon>
+            <span>友链管理</span>
+          </el-menu-item>
+          <el-menu-item index="/admin/contact">
+            <el-icon><Message /></el-icon>
+            <span>联系我编辑</span>
+          </el-menu-item>
           <el-menu-item index="/admin/account">
             <el-icon><Lock /></el-icon>
             <span>账号设置</span>
