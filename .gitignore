@@ -39,3 +39,6 @@ backend/mvnw.cmd
 # 临时文件
 *.tmp
 *.temp
+
+# Claude Code 本地配置
+.claude/
