@@ -689,6 +689,83 @@ git push --force
 
 记忆要点：**密钥一旦推上 GitHub，就当它已经泄露**——光删 commit 不够，必须 revoke + rotate。
 
+### 2026-05-11：IP → 域名 + HTTPS（阿里云轻量·香港节点）
+
+把访问入口从 `http://公网IP` 换成 `https://yourdomain.com`。香港节点免备案，是个人博客的最舒服组合。
+
+#### 架构
+
+```
+浏览器 → DNS 解析 → 服务器 80/443
+                       ↓
+                    宿主机 Nginx（带 SSL）
+                       ↓ proxy_pass
+              Docker 容器  frontend(:8081) + backend(:8080)
+```
+
+**为什么要在宿主机加一层 Nginx？** 让 Certbot 在宿主机申请/续期证书，不必把证书塞进 Docker 容器里。容器只跑应用、解耦干净。
+
+#### 完整步骤
+
+1. **买域名 + 实名认证**（必经）：阿里云域名控制台 → 信息模板里上传身份证，1-3 天审核。
+2. **DNS 解析**：在域名解析面板加两条 A 记录：`@` 和 `www` 都指到服务器公网 IP。
+3. **开放端口**：阿里云轻量后台 → 防火墙 → 放行 TCP 80、443。
+4. **腾出宿主机 80 端口（关键）**：项目里 `docker-compose.yml` 让 frontend 容器直接映射宿主机 :80，会和宿主机 Nginx 冲突。改成 `"8081:80"` 让出 80。
+   ```yaml
+   frontend:
+     ports:
+       - "8081:80"      # 原来是 "80:80"
+   ```
+5. **装 Nginx + Certbot**：
+   ```bash
+   sudo apt install -y nginx certbot python3-certbot-nginx
+   ```
+6. **写宿主机 Nginx 配置**：项目里有模板 `nginx/blog.conf`，要改两处：
+   ```bash
+   sudo cp ~/blog/nginx/blog.conf /etc/nginx/conf.d/blog.conf
+   sudo sed -i 's/yourdomain.com/真域名.com/g' /etc/nginx/conf.d/blog.conf
+   sudo sed -i 's|proxy_pass http://localhost:80;|proxy_pass http://localhost:8081;|' \
+     /etc/nginx/conf.d/blog.conf
+   sudo nginx -t
+   ```
+7. **申请证书**：
+   ```bash
+   sudo certbot --nginx -d 真域名.com -d www.真域名.com
+   ```
+   Certbot 自动改 Nginx 配置加 SSL 块、装好 systemd timer 每 60 天续期。
+8. **启动 Nginx + 验证**：
+   ```bash
+   sudo systemctl enable nginx && sudo systemctl restart nginx
+   ```
+   浏览器访问 `https://真域名.com/blog/`（注意路径是 `/blog/`，因为 vite 的 `base` 配的就是这个）。
+
+#### 关键陷阱
+
+| 现象 | 根因 |
+|---|---|
+| Certbot 报 `unable to bind 0.0.0.0:80` | 宿主机 80 还被 frontend 容器占着 → 必须先做步骤 4 |
+| 访问域名转圈打不开 | 阿里云防火墙没放 80/443 → 步骤 3 漏了 |
+| HTTPS 首页通但 `/api` 502 | Nginx `proxy_pass` 端口指错 → backend 在 `localhost:8080`，frontend 在 `localhost:8081` |
+| `ping yourdomain.com` 不通 | DNS 未生效（等 5-30 分钟）或**域名实名认证没通过** |
+| 浏览器提示「不安全」 | 用了 `http://` 没跳 HTTPS；或证书申请失败被回退 |
+
+#### 一个需要权衡的细节
+
+vite 配置里 `base: '/blog/'`，所以访问入口默认是 `https://你的域名/blog/` 而不是根路径。两个选择：
+
+- **保持现状**（推荐）：维持 `/blog/` 前缀，在 Nginx 加 `location = / { return 301 /blog/; }` 让根路径跳进去
+- **改 vite base 为 `/`**：要顺带改 `vue-router` 的 `createWebHistory(import.meta.env.BASE_URL)`、`.env.production` 等，工程稍大
+
+#### 备案 vs 免备案
+
+| 服务器地域 | 80/443 直接用 | 需要备案 |
+|---|---|---|
+| 中国大陆（北京/上海/杭州...） | ❌ 必须备案，否则封端口 | 是，7-20 天 |
+| 中国香港 | ✅ 直接可用 | 否 |
+| 新加坡/东京/美西 | ✅ 直接可用 | 否 |
+
+个人博客图省事，**首选香港节点**，约 200-300 元/年。
+
 ## 项目结构
 
 ```
