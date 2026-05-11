@@ -33,7 +33,7 @@
     </div>
 
     <div class="copyright">
-      © 2024 我的博客 | 用 ❤ 构建
+      LZZ's blog
     </div>
   </footer>
 </template>
