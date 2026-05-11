@@ -639,6 +639,56 @@ ON DUPLICATE KEY UPDATE `config_value` = VALUES(`config_value`);
 
 教训：**不要在多个地方重复硬编码同一个常量**，否则改起来漏一个就尴尬。能从后端读就从后端读，或者抽到统一的常量文件。
 
+#### 12. 把已经提交的文件从 GitHub 里「下架」
+
+发现 `.claude/settings.local.json`（Claude Code 的本地权限配置）不小心被推到 GitHub 上了。处理思路：
+
+**第一步：以后别再追踪它**
+
+把规则写进 `.gitignore`：
+
+```gitignore
+# Claude Code 本地配置
+.claude/
+```
+
+但仅加 `.gitignore` 是不够的——git 对**已被追踪的文件**会忽略 `.gitignore`。
+
+**第二步：从索引中移除（保留本地）**
+
+```bash
+git rm --cached .claude/settings.local.json
+git add .gitignore
+git commit -m "chore: 停止追踪 .claude 本地配置"
+git push
+```
+
+- `--cached` 是关键：只从 git 索引里删，**磁盘上的文件不动**，本机继续能用
+- 推送之后，GitHub 上「最新版本」就看不到这个文件了
+
+**第三步（可选，慎用）：从历史里彻底抹除**
+
+注意：上面只是「以后不追踪」。在旧 commit 里这个文件**还在**，任何人 clone 后 `git log -- 路径` 都能翻出来。要彻底清除得：
+
+```bash
+git filter-repo --path .claude/settings.local.json --invert-paths
+git push --force
+```
+
+这是**破坏性操作**：
+- 重写了所有 commit 的 hash
+- 所有协作者必须重新 clone
+- `--force` 覆盖远程，可能把别人没合并的提交吹掉
+
+**判断准则：**
+
+| 情况 | 处理方式 |
+|---|---|
+| 配置文件、本地路径、习惯日志（无密钥） | `git rm --cached` + `.gitignore` 就够了 |
+| 误传了密码、API key、私钥、token | 必须 `filter-repo` + 强推 + **立刻吊销/更换密钥** |
+
+记忆要点：**密钥一旦推上 GitHub，就当它已经泄露**——光删 commit 不够，必须 revoke + rotate。
+
 ## 项目结构
 
 ```
