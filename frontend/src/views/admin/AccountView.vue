@@ -131,4 +131,19 @@ const handleSubmit = async () => {
 .password-form {
   max-width: 480px;
 }
+
+@media (max-width: 768px) {
+  .account-view {
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  :deep(.el-form-item__label) {
+    width: 90px !important;
+  }
+
+  :deep(.el-form-item__content) {
+    margin-left: 90px !important;
+  }
+}
 </style>

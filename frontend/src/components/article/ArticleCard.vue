@@ -11,7 +11,12 @@
       <p class="summary">{{ article.summary }}</p>
       <div class="footer">
         <div class="tags">
-          <span v-for="tag in article.tags" :key="tag.id" class="tag" :style="{ color: tag.color }">
+          <span
+            v-for="tag in article.tags"
+            :key="tag.id"
+            class="tag"
+            :style="tagStyle(tag.color)"
+          >
             {{ tag.name }}
           </span>
         </div>
@@ -26,6 +31,7 @@
 
 <script setup>
 import dayjs from 'dayjs'
+import { readableColor, rgbaBg } from '@/utils/color'
 
 const props = defineProps({
   article: { type: Object, required: true }
@@ -34,6 +40,11 @@ const props = defineProps({
 const formatDate = (date) => {
   return date ? dayjs(date).format('YYYY-MM-DD') : ''
 }
+
+const tagStyle = (color) => ({
+  color: readableColor(color),
+  backgroundColor: rgbaBg(color, 0.14),
+})
 </script>
 
 <style lang="scss" scoped>
@@ -116,7 +127,6 @@ const formatDate = (date) => {
 .tag {
   font-size: 0.8em;
   padding: 2px 8px;
-  background: #f7fafc;
   border-radius: 4px;
 }
 

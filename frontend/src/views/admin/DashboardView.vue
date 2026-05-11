@@ -134,6 +134,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 
   h2 {
     font-size: 1.2em;
@@ -146,5 +148,16 @@ onMounted(() => {
   margin-top: 24px;
   display: flex;
   justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  :deep(.el-table) {
+    font-size: 0.85em;
+  }
 }
 </style>

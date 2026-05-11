@@ -29,7 +29,12 @@
 
           <div class="article-footer">
             <div class="tags">
-              <span v-for="tag in article.tags" :key="tag.id" class="tag" :style="{ color: tag.color }">
+              <span
+                v-for="tag in article.tags"
+                :key="tag.id"
+                class="tag"
+                :style="tagStyle(tag.color)"
+              >
                 #{{ tag.name }}
               </span>
             </div>
@@ -50,6 +55,7 @@ import dayjs from 'dayjs'
 import DOMPurify from 'dompurify'
 import { getArticleById } from '@/api/article'
 import { recordVisit } from '@/api/visitor'
+import { readableColor, rgbaBg } from '@/utils/color'
 import CommentSection from '@/components/article/CommentSection.vue'
 import SideBar from '@/components/common/SideBar.vue'
 
@@ -59,6 +65,11 @@ const loading = ref(true)
 
 const sanitizedContent = computed(() => {
   return article.value?.content ? DOMPurify.sanitize(article.value.content) : ''
+})
+
+const tagStyle = (color) => ({
+  color: readableColor(color),
+  backgroundColor: rgbaBg(color, 0.14),
 })
 
 const loadArticle = async () => {
@@ -181,7 +192,6 @@ onMounted(loadArticle)
     .tag {
       font-size: 0.9em;
       padding: 4px 12px;
-      background: #f7fafc;
       border-radius: 4px;
     }
   }

@@ -27,7 +27,7 @@
           :key="tag.id"
           :to="`/articles?tagId=${tag.id}`"
           class="tag-item"
-          :style="{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color + '40' }"
+          :style="tagStyle(tag.color)"
         >
           {{ tag.name }}
           <span class="tag-count">{{ tag.articleCount || 0 }}</span>
@@ -41,9 +41,16 @@
 import { ref, onMounted } from 'vue'
 import { getCategories } from '@/api/category'
 import { getTags } from '@/api/tag'
+import { readableColor, rgbaBg, rgbaBorder } from '@/utils/color'
 
 const categories = ref([])
 const tags = ref([])
+
+const tagStyle = (color) => ({
+  backgroundColor: rgbaBg(color, 0.14),
+  color: readableColor(color),
+  borderColor: rgbaBorder(color, 0.45),
+})
 
 onMounted(async () => {
   try {

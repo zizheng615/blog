@@ -21,7 +21,9 @@ request.interceptors.response.use(
   (response) => {
     const res = response.data
     if (res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
+      if (!response.config?.silent) {
+        ElMessage.error(res.message || '请求失败')
+      }
       if (res.code === 401) {
         localStorage.removeItem('token')
         window.location.href = '/admin/login'
@@ -31,7 +33,9 @@ request.interceptors.response.use(
     return res.data
   },
   (error) => {
-    ElMessage.error(error.response?.data?.message || '网络错误')
+    if (!error.config?.silent) {
+      ElMessage.error(error.response?.data?.message || '网络错误')
+    }
     return Promise.reject(error)
   }
 )

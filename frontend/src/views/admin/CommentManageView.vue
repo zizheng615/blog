@@ -124,11 +124,24 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 
   h2 {
     font-size: 1.2em;
     font-weight: 600;
     color: #2c3e50;
+  }
+}
+
+@media (max-width: 768px) {
+  .comment-manage {
+    padding: 16px;
+    border-radius: 8px;
+  }
+
+  :deep(.el-table) {
+    font-size: 0.85em;
   }
 }
 </style>

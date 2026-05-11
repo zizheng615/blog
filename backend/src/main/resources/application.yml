@@ -5,6 +5,16 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
     default-property-inclusion: non_null
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 110MB
+
+blog:
+  upload:
+    dir: ${BLOG_UPLOAD_DIR:./uploads}
+    url-prefix: /uploads
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/xml/*.xml

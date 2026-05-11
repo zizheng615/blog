@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
                 .antMatchers("/api/v1/auth/login").permitAll()
                 .antMatchers(HttpMethod.GET, "/api/v1/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/v1/articles/*/comments").permitAll()
                 .antMatchers(HttpMethod.POST, "/api/v1/visitors/record").permitAll()
                 .antMatchers("/api/v1/admin/**").hasRole("ADMIN")

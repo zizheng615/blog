@@ -58,6 +58,9 @@ services:
       SPRING_REDIS_HOST: blog-redis
       SPRING_REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-mySecretKeyForBlogApplication2026}
+      BLOG_UPLOAD_DIR: /app/uploads
+    volumes:
+      - upload_data:/app/uploads
     ports:
       - "8080:8080"
     depends_on:
@@ -85,6 +88,7 @@ services:
 volumes:
   mysql_data:
   redis_data:
+  upload_data:
 
 networks:
   blog-network:

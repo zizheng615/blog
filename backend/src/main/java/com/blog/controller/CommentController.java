@@ -27,8 +27,8 @@ public class CommentController {
     public Result<Comment> create(@PathVariable Long articleId, @RequestBody Comment comment,
                                      HttpServletRequest request) {
         comment.setArticleId(articleId);
-        comment.setIpAddress(IpUtil.getIpAddress(request));
-        comment.setUserAgent(request.getHeader("User-Agent"));
+        comment.setIpAddress(HtmlUtils.truncate(IpUtil.getIpAddress(request), 45));
+        comment.setUserAgent(HtmlUtils.truncate(request.getHeader("User-Agent"), 512));
         if (comment.getContent() != null) {
             comment.setContent(HtmlUtils.sanitize(comment.getContent()));
         }

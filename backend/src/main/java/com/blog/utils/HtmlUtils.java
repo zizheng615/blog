@@ -42,4 +42,15 @@ public class HtmlUtils {
                    .replace("\"", "&quot;")
                    .replace("'", "&#x27;");
     }
+
+    /**
+     * Truncate a string to fit a column. Returns null for null input.
+     * Used to keep User-Agent / page URL / referer values within their
+     * DB column width — WeChat in-app browser UAs and shared URLs can be
+     * very long and would otherwise trigger `Data too long` SQL errors.
+     */
+    public static String truncate(String value, int maxLength) {
+        if (value == null) return null;
+        return value.length() <= maxLength ? value : value.substring(0, maxLength);
+    }
 }

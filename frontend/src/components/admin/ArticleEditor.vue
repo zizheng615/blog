@@ -2,10 +2,12 @@
   <el-dialog
     v-model="visible"
     :title="isEdit ? '编辑文章' : '新建文章'"
-    width="900px"
+    :width="dialogWidth"
+    :fullscreen="isMobile"
+    class="article-editor-dialog"
     destroy-on-close
   >
-    <el-form :model="form" label-width="80px" ref="formRef">
+    <el-form :model="form" :label-width="isMobile ? '70px' : '80px'" ref="formRef">
       <el-form-item label="标题" required>
         <el-input v-model="form.title" placeholder="文章标题" />
       </el-form-item>
@@ -13,7 +15,7 @@
         <el-input v-model="form.slug" placeholder="URL-friendly 标识" />
       </el-form-item>
       <el-form-item label="分类" required>
-        <el-select v-model="form.categoryId" placeholder="选择分类">
+        <el-select v-model="form.categoryId" placeholder="选择分类" style="width: 100%">
           <el-option
             v-for="cat in categories"
             :key="cat.id"
@@ -29,7 +31,7 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item label="标签">
-        <el-select v-model="form.tagIds" multiple placeholder="选择标签">
+        <el-select v-model="form.tagIds" multiple placeholder="选择标签" style="width: 100%">
           <el-option
             v-for="tag in tags"
             :key="tag.id"
@@ -44,15 +46,23 @@
           type="textarea"
           :rows="2"
           placeholder="文章摘要"
+          resize="none"
         />
       </el-form-item>
       <el-form-item label="内容" required>
         <div class="editor-wrapper">
+          <Toolbar
+            :editor="editorRef"
+            :defaultConfig="toolbarConfig"
+            mode="default"
+            class="editor-toolbar"
+          />
           <Editor
             v-model="form.content"
             :defaultConfig="editorConfig"
             mode="default"
-            style="height: 400px"
+            class="editor-body"
+            @onCreated="onEditorCreated"
           />
         </div>
       </el-form-item>
@@ -71,9 +81,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, computed, shallowRef, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Editor } from '@wangeditor/editor-for-vue'
+import '@wangeditor/editor/dist/css/style.css'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { createArticle, updateArticle } from '@/api/article'
 
 const props = defineProps({
@@ -87,13 +98,65 @@ const visible = ref(false)
 const loading = ref(false)
 const isEdit = ref(false)
 const formRef = ref()
+const editorRef = shallowRef()
+
+const viewportWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1200)
+const onResize = () => { viewportWidth.value = window.innerWidth }
+onMounted(() => window.addEventListener('resize', onResize))
+onUnmounted(() => window.removeEventListener('resize', onResize))
+
+const isMobile = computed(() => viewportWidth.value <= 768)
+const dialogWidth = computed(() => {
+  if (viewportWidth.value >= 1200) return '900px'
+  if (viewportWidth.value >= 992) return '80%'
+  return '95%'
+})
+
+const uploadHeaders = () => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+const toolbarConfig = {
+  excludeKeys: []
+}
 
 const editorConfig = {
   placeholder: '请输入文章内容...',
   MENU_CONF: {
-    uploadImage: { server: '/api/upload', fieldName: 'file' }
+    uploadImage: {
+      server: '/api/v1/admin/upload/image',
+      fieldName: 'file',
+      maxFileSize: 10 * 1024 * 1024,
+      allowedFileTypes: ['image/*'],
+      headers: uploadHeaders(),
+      timeout: 30 * 1000,
+      meta: {},
+      metaWithUrl: false,
+      withCredentials: false,
+    },
+    uploadVideo: {
+      server: '/api/v1/admin/upload/video',
+      fieldName: 'file',
+      maxFileSize: 100 * 1024 * 1024,
+      allowedFileTypes: ['video/*'],
+      headers: uploadHeaders(),
+      timeout: 5 * 60 * 1000,
+      meta: {},
+      metaWithUrl: false,
+      withCredentials: false,
+    },
   }
 }
+
+const onEditorCreated = (editor) => {
+  editorRef.value = editor
+}
+
+onBeforeUnmount(() => {
+  const editor = editorRef.value
+  if (editor) editor.destroy()
+})
 
 const form = reactive({
   id: null,
@@ -119,6 +182,9 @@ const open = (article = null) => {
       content: '', status: 'PUBLISHED'
     })
   }
+  // refresh upload headers in case token changed between opens
+  editorConfig.MENU_CONF.uploadImage.headers = uploadHeaders()
+  editorConfig.MENU_CONF.uploadVideo.headers = uploadHeaders()
   visible.value = true
 }
 
@@ -151,12 +217,47 @@ defineExpose({ open })
 
 <style lang="scss" scoped>
 .editor-wrapper {
+  width: 100%;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   overflow: hidden;
+}
 
-  :deep(.w-e-text-container) {
-    min-height: 350px;
+.editor-toolbar {
+  border-bottom: 1px solid #dcdfe6;
+}
+
+.editor-body {
+  height: 400px;
+  overflow-y: auto;
+}
+
+:deep(.w-e-text-container) {
+  height: 100% !important;
+}
+
+:deep(.w-e-scroll) {
+  height: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .editor-body {
+    height: 320px;
+  }
+}
+</style>
+
+<style lang="scss">
+.article-editor-dialog {
+  .el-dialog__body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .article-editor-dialog.is-fullscreen .el-dialog__body {
+    max-height: calc(100vh - 160px);
   }
 }
 </style>
