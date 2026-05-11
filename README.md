@@ -405,6 +405,240 @@ docker stats
 
 阿里云/腾讯云在控制台 → 安全组 → 入站规则中添加。
 
+## 开发学习笔记
+
+> 这一节按日期记录每次新增/重构功能时遇到的「重难点」，方便日后回顾。
+
+### 2026-05-11：联系方式 & 友链后台管理
+
+本次新增了「后台可编辑联系方式」和「后台可增删改友链」两个功能。以下是关键技术点。
+
+#### 1. 数据建模：通用 key/value 配置表 vs 专用表
+
+> 联系方式只有 3 个字段（邮箱、GitHub、B 站），把它们都建一个固定列的 `contact` 表也行，但日后想加「微信公众号、微博、知乎」就得改表结构。
+
+更通用的做法是建一个 **`site_config` 配置表**，所有杂项都以 `key/value` 形式存放：
+
+```sql
+CREATE TABLE `site_config` (
+    `id`           BIGINT PRIMARY KEY AUTO_INCREMENT,
+    `config_key`   VARCHAR(64)  NOT NULL UNIQUE,
+    `config_value` VARCHAR(512),
+    `updated_at`   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+- `config_key` 加 `UNIQUE` 约束，方便做 upsert
+- `config_value` 用 `VARCHAR(512)`，足够放 URL、邮箱、短文本
+
+**何时选 key/value：** 字段会持续增加、字段之间没有强关系（不会 JOIN）、不需要 SQL 层做校验。本项目的「站点设置」就是这种典型场景。
+
+#### 2. 后端模块：一个 CRUD 只需 5 个文件
+
+完整的「新增 site_config 模块」涉及：
+
+```
+entity/SiteConfig.java            ← @Data + @TableName("site_config")
+mapper/SiteConfigMapper.java      ← extends BaseMapper<SiteConfig>，零代码
+service/SiteConfigService.java    ← 业务接口
+service/impl/SiteConfigServiceImpl.java
+controller/SiteConfigController.java
+```
+
+照着 `FriendLink` 那一套复制改名即可。MyBatis Plus 的 `BaseMapper` 已经提供 `selectList`、`insert`、`updateById`、`deleteById`，常规 CRUD 不用写 SQL。
+
+#### 3. Upsert（不存在则插入，存在则更新）
+
+后端保存联系方式时，前端传过来的是一个 `Map<String, String>`，每个 key 都可能是新增也可能是更新。MyBatis Plus 没有原生 upsert，最简单的写法是先查再分支：
+
+```java
+@Override
+@Transactional
+public Map<String, String> updateAll(Map<String, String> updates) {
+    for (Map.Entry<String, String> entry : updates.entrySet()) {
+        String key = entry.getKey();
+        SiteConfig existing = siteConfigMapper.selectOne(
+            new LambdaQueryWrapper<SiteConfig>().eq(SiteConfig::getConfigKey, key));
+        if (existing == null) {
+            SiteConfig sc = new SiteConfig();
+            sc.setConfigKey(key);
+            sc.setConfigValue(entry.getValue());
+            siteConfigMapper.insert(sc);
+        } else {
+            existing.setConfigValue(entry.getValue());
+            siteConfigMapper.updateById(existing);
+        }
+    }
+    return getAll();
+}
+```
+
+要点：
+- **加 `@Transactional`**：多次 DB 操作要在一个事务里，要么全部成功，要么一起回滚
+- 使用 `LambdaQueryWrapper` 而不是手写 `"config_key = ?"`，避免列名拼写错误
+
+#### 4. 同一个 Controller 里公开接口 + 管理员接口共存
+
+前台需要读联系方式（无需登录），后台需要读取并能修改（需 ADMIN 角色）：
+
+```java
+@RestController
+@RequestMapping("/api/v1")
+public class SiteConfigController {
+
+    @GetMapping("/site-config")           // 公开
+    public Result<Map<String, String>> getPublic() { ... }
+
+    @GetMapping("/admin/site-config")     // 管理员
+    public Result<Map<String, String>> getAdmin() { ... }
+
+    @PutMapping("/admin/site-config")     // 管理员
+    public Result<Map<String, String>> update(@RequestBody Map<String, String> body) { ... }
+}
+```
+
+Spring Security 在 `SecurityConfig` 里已配好：
+
+```java
+.antMatchers(HttpMethod.GET, "/api/v1/**").permitAll()   // GET 全公开
+.antMatchers("/api/v1/admin/**").hasRole("ADMIN")        // 但 admin 下的修改类需要登录
+```
+
+#### 5. 前端：Element Plus 表格 + 弹窗 CRUD 的固定套路
+
+`FriendLinkManageView.vue` 完整体现了「列表 + 新增/编辑弹窗 + 删除确认」的标准做法：
+
+```vue
+<el-table :data="links" v-loading="loading" stripe>
+  <el-table-column prop="name" label="名称" />
+  ...
+  <el-table-column label="操作">
+    <template #default="{ row }">
+      <el-button @click="openEdit(row)">编辑</el-button>
+      <el-button type="danger" @click="handleDelete(row)">删除</el-button>
+    </template>
+  </el-table-column>
+</el-table>
+
+<el-dialog v-model="dialogVisible" :title="form.id ? '编辑' : '新增'">
+  <el-form ref="formRef" :model="form" :rules="rules" />
+  <template #footer>
+    <el-button @click="dialogVisible = false">取消</el-button>
+    <el-button type="primary" :loading="saving" @click="handleSubmit">保存</el-button>
+  </template>
+</el-dialog>
+```
+
+关键点：
+- **`form.id` 既是「是否编辑模式」的判定，又是 URL 里的 ID**——新增时为 `null`，编辑时填进去
+- **`v-loading="loading"`** 让用户在请求过程中看到加载态
+- **`ElMessageBox.confirm` 用 try/catch 包裹**，取消时它会 `reject('cancel')`：
+
+```js
+try {
+  await ElMessageBox.confirm('确定删除？', '确认', { type: 'warning' })
+  await deleteFriendLink(row.id)
+} catch (e) {
+  if (e !== 'cancel') { /* 真出错了 */ }
+}
+```
+
+#### 6. el-form 校验是 Promise，要 try/catch
+
+```js
+const handleSubmit = async () => {
+  try {
+    await formRef.value.validate()   // 校验失败会 throw
+  } catch (e) {
+    return                            // 直接 return，不要往下走
+  }
+  // 走到这里说明校验通过
+  await updateFriendLink(form.id, payload)
+}
+```
+
+#### 7. 表单复用：一个 form 对象支持「新增 + 编辑」
+
+最佳实践是写一个 `emptyForm()` 工厂函数，每次打开弹窗时 `Object.assign(form, emptyForm(), 现有数据)`：
+
+```js
+const emptyForm = () => ({
+  id: null, name: '', url: '', sortOrder: 0, isActive: true,
+})
+const form = reactive(emptyForm())
+
+const openCreate = () => { Object.assign(form, emptyForm()) }
+const openEdit = (row) => { Object.assign(form, emptyForm(), row) }
+```
+
+这样能保证关闭弹窗后再次打开时不会残留上一次的数据。
+
+#### 8. 默认值兜底：API 挂了页面也别裂
+
+前台 `ContactView` 读取 `/api/v1/site-config`，但如果后端还没部署、或者 DB 还没建好表，要让页面照样能展示。做法是：在 setup 阶段先填默认值，API 成功后再合并覆盖：
+
+```js
+const DEFAULTS = {
+  contact_email: '2788906816@qq.com',
+  contact_github: 'https://github.com/zizheng615',
+  contact_bilibili: 'https://space.bilibili.com/291245814',
+}
+const config = ref({ ...DEFAULTS })
+
+onMounted(async () => {
+  try {
+    const data = await getSiteConfig()
+    if (data && typeof data === 'object') {
+      config.value = { ...DEFAULTS, ...data }   // 关键：先展开默认，再被 API 覆盖
+    }
+  } catch (e) { console.error(e) }
+})
+```
+
+这种「先有默认值，再被远程数据替换」的模式可以推广到任何依赖远程配置的页面。
+
+#### 9. 可重复执行的迁移脚本（idempotent migration）
+
+写 `migrations/2026-05-13_add_site_config.sql` 时，**插入语句一定要加 `ON DUPLICATE KEY UPDATE`**，这样即使误执行第二次也不会报错：
+
+```sql
+CREATE TABLE IF NOT EXISTS `site_config` ( ... );
+
+INSERT INTO `site_config` (`config_key`, `config_value`) VALUES
+    ('contact_email',    '2788906816@qq.com'),
+    ('contact_github',   'https://github.com/zizheng615'),
+    ('contact_bilibili', 'https://space.bilibili.com/291245814')
+ON DUPLICATE KEY UPDATE `config_value` = VALUES(`config_value`);
+```
+
+- `CREATE TABLE IF NOT EXISTS` 保证表已存在时不报错
+- `ON DUPLICATE KEY UPDATE` 让 INSERT 在唯一键冲突时变成 UPDATE
+- **同步更新 `schema.sql`**，新部署的环境直接拥有最新表结构和种子数据
+
+#### 10. 同步新增「路由 + 侧边栏菜单」
+
+新页面要让用户能进入，必须**同时**改两个文件，路径要一致：
+
+```js
+// router/index.js
+{ path: 'friend-links', component: () => import('@/views/admin/FriendLinkManageView.vue') },
+{ path: 'contact',      component: () => import('@/views/admin/ContactManageView.vue') },
+```
+
+```vue
+<!-- AdminLayout.vue -->
+<el-menu-item index="/admin/friend-links">...友链管理</el-menu-item>
+<el-menu-item index="/admin/contact">...联系我编辑</el-menu-item>
+```
+
+`el-menu-item` 的 `index` 必须是「带 `/admin/` 前缀的绝对路径」，因为 `el-menu` 上面写了 `router` 属性会直接当作 `to` 用。
+
+#### 11. 修改一处，前台多处生效
+
+为了让管理员在后台改完联系方式后，「联系我」页面和「页脚关注我」板块**都自动更新**，我们把页脚里原本写死的 `<a href="https://github.com/..." />` 也改成了从 `site-config` 接口读。
+
+教训：**不要在多个地方重复硬编码同一个常量**，否则改起来漏一个就尴尬。能从后端读就从后端读，或者抽到统一的常量文件。
+
 ## 项目结构
 
 ```
