@@ -31,6 +31,7 @@ services:
     image: redis:7-alpine
     container_name: blog-redis
     restart: always
+    command: redis-server --appendonly yes --save 60 1
     volumes:
       - redis_data:/data
     ports:
