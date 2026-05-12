@@ -41,4 +41,7 @@ public class Article {
 
     @TableField(exist = false)
     private User author;
+
+    @TableField(exist = false)
+    private Boolean republish;
 }

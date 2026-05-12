@@ -100,7 +100,8 @@ public class ArticleController {
         if (article.getContent() != null) {
             article.setContent(HtmlUtils.sanitize(article.getContent()));
         }
-        if ("PUBLISHED".equals(article.getStatus()) && article.getPublishedAt() == null) {
+        if ("PUBLISHED".equals(article.getStatus())
+                && (article.getPublishedAt() == null || Boolean.TRUE.equals(article.getRepublish()))) {
             article.setPublishedAt(LocalDateTime.now());
         }
         article.setSlug(ensureSlug(article.getSlug(), article.getTitle()));

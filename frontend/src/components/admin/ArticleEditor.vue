@@ -96,6 +96,11 @@
           <el-radio-button :value="'DRAFT'">草稿</el-radio-button>
         </el-radio-group>
       </el-form-item>
+      <el-form-item v-if="isEdit" label="重新发布">
+        <el-checkbox v-model="form.republish">
+          保存时将发布时间更新为当前，本文会重新排到最新文章顶部
+        </el-checkbox>
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
@@ -223,7 +228,8 @@ const form = reactive({
   tagIds: [],
   summary: '',
   content: '',
-  status: 'PUBLISHED'
+  status: 'PUBLISHED',
+  republish: false
 })
 
 const open = (article = null) => {
@@ -238,6 +244,7 @@ const open = (article = null) => {
       content: '', status: 'PUBLISHED'
     })
   }
+  form.republish = false
   // refresh upload headers in case token changed between opens
   editorConfig.MENU_CONF.uploadImage.headers = uploadHeaders()
   editorConfig.MENU_CONF.uploadVideo.headers = uploadHeaders()
