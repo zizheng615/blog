@@ -2,12 +2,17 @@ package com.blog.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.entity.Article;
+import com.blog.entity.User;
 import com.blog.service.ArticleService;
+import com.blog.service.UserService;
 import com.blog.utils.HtmlUtils;
 import com.blog.utils.Result;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +24,14 @@ import java.util.stream.Collectors;
 public class ArticleController {
 
     private final ArticleService articleService;
+    private final UserService userService;
+
+    private Long currentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) return null;
+        User u = userService.getByUsername(auth.getName());
+        return u != null ? u.getId() : null;
+    }
 
     @GetMapping("/articles")
     public Result<Map<String, Object>> list(
@@ -55,8 +68,7 @@ public class ArticleController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String status) {
-        Page<Article> articlePage = articleService.listPage(page, size, null, null, null,
-                status != null ? status : null);
+        Page<Article> articlePage = articleService.listPage(page, size, null, null, null, status);
         Map<String, Object> result = new HashMap<>();
         result.put("list", articlePage.getRecords());
         result.put("total", articlePage.getTotal());
@@ -70,6 +82,12 @@ public class ArticleController {
         if (article.getContent() != null) {
             article.setContent(HtmlUtils.sanitize(article.getContent()));
         }
+        if (article.getAuthorId() == null) {
+            article.setAuthorId(currentUserId());
+        }
+        if ("PUBLISHED".equals(article.getStatus()) && article.getPublishedAt() == null) {
+            article.setPublishedAt(LocalDateTime.now());
+        }
         Article created = articleService.create(article, article.getTags() != null ?
                 article.getTags().stream().map(tag -> tag.getId()).collect(Collectors.toList()) : null);
         return Result.success(created);
@@ -80,6 +98,9 @@ public class ArticleController {
         article.setId(id);
         if (article.getContent() != null) {
             article.setContent(HtmlUtils.sanitize(article.getContent()));
+        }
+        if ("PUBLISHED".equals(article.getStatus()) && article.getPublishedAt() == null) {
+            article.setPublishedAt(LocalDateTime.now());
         }
         Article updated = articleService.update(article, article.getTags() != null ?
                 article.getTags().stream().map(tag -> tag.getId()).collect(Collectors.toList()) : null);

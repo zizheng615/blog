@@ -36,7 +36,9 @@
         FROM article a
         LEFT JOIN category c ON a.category_id = c.id
         <where>
-            a.status = #{status}
+            <if test="status != null and status != ''">
+                AND a.status = #{status}
+            </if>
             <if test="categoryId != null">
                 AND a.category_id = #{categoryId}
             </if>

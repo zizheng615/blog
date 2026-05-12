@@ -26,8 +26,8 @@
       </el-form-item>
       <el-form-item label="类型">
         <el-radio-group v-model="form.articleType">
-          <el-radio-button label="TECH">技术</el-radio-button>
-          <el-radio-button label="LIFE">生活</el-radio-button>
+          <el-radio-button :value="'TECH'">技术</el-radio-button>
+          <el-radio-button :value="'LIFE'">生活</el-radio-button>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="标签">
@@ -68,8 +68,8 @@
       </el-form-item>
       <el-form-item label="状态">
         <el-radio-group v-model="form.status">
-          <el-radio-button label="PUBLISHED">发布</el-radio-button>
-          <el-radio-button label="DRAFT">草稿</el-radio-button>
+          <el-radio-button :value="'PUBLISHED'">发布</el-radio-button>
+          <el-radio-button :value="'DRAFT'">草稿</el-radio-button>
         </el-radio-group>
       </el-form-item>
     </el-form>

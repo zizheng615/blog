@@ -52,8 +52,7 @@ public class ArticleServiceImpl implements ArticleService {
         }
 
         Page<Article> pageParam = new Page<>(page, size);
-        String statusFilter = status != null ? status : "PUBLISHED";
-        Page<Article> result = articleMapper.selectPageWithCategory(pageParam, categoryId, tagId, articleType, statusFilter);
+        Page<Article> result = articleMapper.selectPageWithCategory(pageParam, categoryId, tagId, articleType, status);
 
         if (result != null && result.getRecords() != null) {
             for (Article article : result.getRecords()) {
