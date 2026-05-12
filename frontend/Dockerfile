@@ -14,7 +14,8 @@ RUN npm config set registry https://registry.npmmirror.com
 COPY package*.json ./
 
 # 用 ci 走锁文件版本,不写 lock,关闭 audit/fund 提速
-RUN npm ci --no-audit --no-fund
+# 加 legacy-peer-deps: wangeditor 公式插件 peer 上 katex@0.15 而项目装的是 0.16(API 兼容)
+RUN npm ci --no-audit --no-fund --legacy-peer-deps
 
 # 再拷源码,前面的依赖层可以复用
 COPY . .
