@@ -52,6 +52,6 @@
                 )
             </if>
         </where>
-        ORDER BY a.is_top DESC, a.published_at DESC
+        ORDER BY a.published_at DESC
     </select>
 </mapper>

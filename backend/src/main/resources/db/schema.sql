@@ -163,7 +163,7 @@ public class BlogApplication {
         SpringApplication.run(BlogApplication.class, args);
     }
 }</code></pre><p>以上就是 Spring Boot 3 的基础入门，更多高级特性敬请期待后续文章。</p>',
-1, 1, 'TECH', 'PUBLISHED', 128, 3, TRUE, '2024-01-15 10:00:00'),
+1, 1, 'TECH', 'PUBLISHED', 128, 3, FALSE, '2024-01-15 10:00:00'),
 
 ('Vue 3 Composition API 实践指南', 'vue3-composition-api',
 'Composition API 是 Vue 3 最重要的新特性之一，它提供了一种更灵活、更强大的组织组件逻辑的方式。',
@@ -211,7 +211,7 @@ public class JwtTokenProvider {
             .compact();
     }
 }</code></pre>',
-1, 1, 'TECH', 'PUBLISHED', 156, 2, TRUE, '2024-04-05 16:00:00'),
+1, 1, 'TECH', 'PUBLISHED', 156, 2, FALSE, '2024-04-05 16:00:00'),
 
 ('Docker 容器化部署实践', 'docker-deployment',
 'Docker 让应用部署变得简单高效，本文介绍如何将 Spring Boot 应用容器化并部署到生产环境。',
