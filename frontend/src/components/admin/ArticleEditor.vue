@@ -156,6 +156,39 @@ if (!window.__blogFormulaRegistered) {
   }
 }
 
+const preprocessMathPaste = (html) => {
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  const annotations = doc.querySelectorAll('annotation[encoding="application/x-tex"]')
+  annotations.forEach(ann => {
+    const latex = (ann.textContent || '').trim()
+    if (!latex) return
+    let wrapper = ann.closest('.katex-display, .katex, .MathJax_Display, .MathJax, mjx-container, math')
+    if (!wrapper) wrapper = ann.parentElement
+    if (!wrapper) return
+    const isDisplay =
+      wrapper.classList.contains('katex-display') ||
+      wrapper.classList.contains('MathJax_Display') ||
+      wrapper.getAttribute('display') === 'block' ||
+      wrapper.getAttribute('display') === 'true' ||
+      !!wrapper.closest('.katex-display, .MathJax_Display')
+    if (isDisplay) {
+      const p = doc.createElement('p')
+      p.textContent = `$$${latex}$$`
+      wrapper.replaceWith(p)
+    } else {
+      const span = doc.createElement('span')
+      span.setAttribute('data-w-e-type', 'formula')
+      span.setAttribute('data-w-e-is-void', '')
+      span.setAttribute('data-w-e-is-inline', '')
+      span.setAttribute('data-value', latex)
+      wrapper.replaceWith(span)
+    }
+  })
+  // Drop residual MathML / aria nodes that would otherwise paste as duplicated text
+  doc.querySelectorAll('math, mjx-assistive-mml, .katex-mathml, .katex-html, [aria-hidden="true"]').forEach(n => n.remove())
+  return doc.body.innerHTML
+}
+
 const props = defineProps({
   categories: { type: Array, default: () => [] },
   tags: { type: Array, default: () => [] }
@@ -227,6 +260,21 @@ const toolbarConfig = {
 
 const editorConfig = {
   placeholder: '请输入文章内容...',
+  customPaste(editor, event) {
+    const html = event.clipboardData?.getData('text/html') || ''
+    if (!html) return true
+    const looksLikeMath = /\bkatex\b|\bMathJax\b|<mjx-|<annotation\b|<math[\s>]/i.test(html)
+    if (!looksLikeMath) return true
+    try {
+      const cleaned = preprocessMathPaste(html)
+      editor.dangerouslyInsertHtml(cleaned)
+      event.preventDefault()
+      return false
+    } catch (e) {
+      console.warn('Math paste preprocess failed, falling back to default paste:', e)
+      return true
+    }
+  },
   MENU_CONF: {
     uploadImage: {
       server: '/api/v1/admin/upload/image',
