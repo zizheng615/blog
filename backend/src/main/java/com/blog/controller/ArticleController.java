@@ -8,6 +8,7 @@ import com.blog.service.UserService;
 import com.blog.utils.HtmlUtils;
 import com.blog.utils.Result;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -97,12 +99,16 @@ public class ArticleController {
     @PutMapping("/admin/articles/{id}")
     public Result<Article> update(@PathVariable Long id, @RequestBody Article article) {
         article.setId(id);
+        log.info("Update article request: id={}, republish={}, publishedAt={}, status={}",
+                id, article.getRepublish(), article.getPublishedAt(), article.getStatus());
         if (article.getContent() != null) {
             article.setContent(HtmlUtils.sanitize(article.getContent()));
         }
+        boolean shouldRepublish = Boolean.TRUE.equals(article.getRepublish());
         if ("PUBLISHED".equals(article.getStatus())
-                && (article.getPublishedAt() == null || Boolean.TRUE.equals(article.getRepublish()))) {
+                && (article.getPublishedAt() == null || shouldRepublish)) {
             article.setPublishedAt(LocalDateTime.now());
+            log.info("Article republished: id={}, newPublishedAt={}", id, article.getPublishedAt());
         }
         article.setSlug(ensureSlug(article.getSlug(), article.getTitle()));
         Article updated = articleService.update(article, article.getTags() != null ?

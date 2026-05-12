@@ -625,6 +625,7 @@ const submit = async () => {
   loading.value = true
   try {
     const data = { ...form }
+    data.republish = data.republish === true
     data.tags = form.tagIds.map(id => ({ id }))
     if (form.editorMode === 'MARKDOWN') {
       // Convert markdown to HTML server-side so detail view can render via v-html;
