@@ -88,6 +88,7 @@ public class ArticleController {
         if ("PUBLISHED".equals(article.getStatus()) && article.getPublishedAt() == null) {
             article.setPublishedAt(LocalDateTime.now());
         }
+        article.setSlug(ensureSlug(article.getSlug(), article.getTitle()));
         Article created = articleService.create(article, article.getTags() != null ?
                 article.getTags().stream().map(tag -> tag.getId()).collect(Collectors.toList()) : null);
         return Result.success(created);
@@ -102,6 +103,7 @@ public class ArticleController {
         if ("PUBLISHED".equals(article.getStatus()) && article.getPublishedAt() == null) {
             article.setPublishedAt(LocalDateTime.now());
         }
+        article.setSlug(ensureSlug(article.getSlug(), article.getTitle()));
         Article updated = articleService.update(article, article.getTags() != null ?
                 article.getTags().stream().map(tag -> tag.getId()).collect(Collectors.toList()) : null);
         return Result.success(updated);
@@ -111,5 +113,27 @@ public class ArticleController {
     public Result<Void> delete(@PathVariable Long id) {
         articleService.delete(id);
         return Result.success();
+    }
+
+    /**
+     * 保证 slug 非空且基本唯一：用户提供则原样保留（仅 trim），未提供则按标题生成
+     * URL-friendly 段 + 毫秒时间戳兜底。标题不含 ASCII 字符时回退到 "article-{ts}"。
+     */
+    private String ensureSlug(String provided, String title) {
+        if (provided != null && !provided.trim().isEmpty()) {
+            return provided.trim();
+        }
+        String base = title == null ? "" : title.trim().toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .replaceAll("\\s+", "-")
+                .replaceAll("-+", "-")
+                .replaceAll("^-+|-+$", "");
+        if (base.isEmpty()) {
+            base = "article";
+        }
+        if (base.length() > 80) {
+            base = base.substring(0, 80);
+        }
+        return base + "-" + System.currentTimeMillis();
     }
 }
