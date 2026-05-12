@@ -111,11 +111,49 @@
 
 <script setup>
 import { ref, reactive, computed, shallowRef, watch, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import { Boot } from '@wangeditor/editor'
 import { createArticle, updateArticle } from '@/api/article'
 import { createTag } from '@/api/tag'
+
+const mathMenuIcon = (label) =>
+  `<svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor"><text x="80" y="780" font-size="700" font-family="Cambria,Times,serif" font-style="italic">${label}</text></svg>`
+
+const createMathMenu = (block) => ({
+  title: block ? '插入块级公式' : '插入行内公式',
+  tag: 'button',
+  iconSvg: mathMenuIcon(block ? '∫' : 'x²'),
+  exec(editor) {
+    ElMessageBox.prompt(
+      block ? '输入 LaTeX 块级公式（独占一行渲染）' : '输入 LaTeX 行内公式',
+      block ? '插入块级公式' : '插入行内公式',
+      {
+        confirmButtonText: '插入',
+        cancelButtonText: '取消',
+        inputPlaceholder: block ? '例如：\\int_0^1 x^2 dx' : '例如：x^2 + y^2 = z^2',
+        inputValidator: (v) => (v && v.trim()) ? true : '公式不能为空'
+      }
+    ).then(({ value }) => {
+      const latex = value.trim()
+      editor.insertText(block ? `$$${latex}$$` : `$${latex}$`)
+    }).catch(() => {})
+  },
+  getValue() { return '' },
+  isActive() { return false },
+  isDisabled() { return false }
+})
+
+if (!window.__blogMathMenusRegistered) {
+  try {
+    Boot.registerMenu({ key: 'insertMathInline', factory: () => createMathMenu(false) })
+    Boot.registerMenu({ key: 'insertMathBlock', factory: () => createMathMenu(true) })
+    window.__blogMathMenusRegistered = true
+  } catch (e) {
+    console.warn('Math menu register skipped:', e)
+  }
+}
 
 const props = defineProps({
   categories: { type: Array, default: () => [] },
@@ -179,7 +217,11 @@ const uploadHeaders = () => {
 }
 
 const toolbarConfig = {
-  excludeKeys: []
+  excludeKeys: [],
+  insertKeys: {
+    index: 30,
+    keys: ['insertMathInline', 'insertMathBlock']
+  }
 }
 
 const editorConfig = {
