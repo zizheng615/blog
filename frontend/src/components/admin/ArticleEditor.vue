@@ -469,7 +469,10 @@ const mdImageUploading = ref(false)
 
 const markdownPreview = computed(() => {
   if (form.editorMode !== 'MARKDOWN' || !form.contentMd) return ''
-  return DOMPurify.sanitize(mdParser.render(form.contentMd))
+  return DOMPurify.sanitize(mdParser.render(form.contentMd), {
+    ADD_TAGS: ['video', 'source', 'track', 'iframe', 'embed'],
+    ADD_ATTR: ['src', 'controls', 'autoplay', 'loop', 'muted', 'poster', 'width', 'height', 'type', 'frameborder', 'allowfullscreen', 'allow']
+  })
 })
 
 const insertMarkdownAtCursor = (text) => {

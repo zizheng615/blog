@@ -10,8 +10,6 @@ public class HtmlUtils {
         "<iframe[^>]*?>.*?</iframe>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern OBJECT_PATTERN = Pattern.compile(
         "<object[^>]*?>.*?</object>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern EMBED_PATTERN = Pattern.compile(
-        "<embed[^>]*?>", Pattern.CASE_INSENSITIVE);
     private static final Pattern EVENT_PATTERN = Pattern.compile(
         "\\s*on\\w+\\s*=\\s*['\"]?[^'\"]*['\"]?", Pattern.CASE_INSENSITIVE);
     private static final Pattern JS_PROTOCOL = Pattern.compile(
@@ -27,7 +25,6 @@ public class HtmlUtils {
         result = SCRIPT_PATTERN.matcher(result).replaceAll("");
         result = IFRAME_PATTERN.matcher(result).replaceAll("");
         result = OBJECT_PATTERN.matcher(result).replaceAll("");
-        result = EMBED_PATTERN.matcher(result).replaceAll("");
         result = EVENT_PATTERN.matcher(result).replaceAll("");
         result = JS_PROTOCOL.matcher(result).replaceAll("");
         result = DATA_PROTOCOL.matcher(result).replaceAll("");

@@ -25,6 +25,6 @@ public interface ArticleMapper extends BaseMapper<Article> {
     @Update("UPDATE article SET view_count = view_count + 1 WHERE id = #{id}")
     void incrementViewCount(@Param("id") Long id);
 
-    @Select("SELECT a.* FROM article a INNER JOIN article_tag at ON a.id = at.article_id WHERE at.tag_id = #{tagId} AND a.status = 'PUBLISHED' ORDER BY a.is_top DESC, a.published_at DESC")
+    @Select("SELECT a.* FROM article a INNER JOIN article_tag at ON a.id = at.article_id WHERE at.tag_id = #{tagId} AND a.status = 'PUBLISHED' ORDER BY a.is_top DESC, COALESCE(a.published_at, a.created_at) DESC")
     List<Article> selectByTagId(@Param("tagId") Long tagId);
 }
