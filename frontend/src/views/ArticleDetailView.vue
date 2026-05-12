@@ -74,7 +74,7 @@ const articleBodyRef = ref(null)
 const sanitizedContent = computed(() => {
   return article.value?.content ? DOMPurify.sanitize(article.value.content, {
     ADD_TAGS: ['video', 'source', 'track', 'iframe', 'embed'],
-    ADD_ATTR: ['data-w-e-type', 'data-w-e-is-void', 'data-w-e-is-inline', 'data-value', 'src', 'controls', 'autoplay', 'loop', 'muted', 'poster', 'width', 'height', 'type', 'frameborder', 'allowfullscreen', 'allow']
+    ADD_ATTR: ['data-w-e-type', 'data-w-e-is-void', 'data-w-e-is-inline', 'data-value', 'src', 'controls', 'autoplay', 'loop', 'muted', 'poster', 'width', 'height', 'type', 'frameborder', 'allowfullscreen', 'allow', 'style', 'preload', 'playsinline']
   }) : ''
 })
 

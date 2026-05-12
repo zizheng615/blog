@@ -85,12 +85,16 @@
 
   video {
     height: auto;
+    min-height: 240px;
+    background: #1a1a2e;
+    display: block;
   }
 
   iframe {
     aspect-ratio: 16 / 9;
     width: 100%;
     border: none;
+    min-height: 360px;
   }
 }
 

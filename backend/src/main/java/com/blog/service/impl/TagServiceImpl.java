@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -24,6 +25,23 @@ public class TagServiceImpl implements TagService {
 
     private static final String TAG_ALL_KEY = "tag:all";
     private static final long CACHE_TTL = 60;
+
+    // 预设标签颜色池 — 高区分度、不刺眼、白底可读
+    private static final String[] TAG_COLORS = {
+        "#409EFF", // 蓝
+        "#13C2C2", // 青
+        "#52C41A", // 绿
+        "#FA8C16", // 橙
+        "#F5222D", // 红
+        "#722ED1", // 紫
+        "#EB2F96", // 玫红
+        "#2F54EB", // 靛蓝
+        "#FAAD14", // 金黄
+        "#1890FF", // 亮蓝
+        "#52C41A", // 草绿
+        "#FA541C", // 橙红
+    };
+    private static final Random RANDOM = new Random();
 
     @Override
     public List<Tag> listAll() {
@@ -76,7 +94,7 @@ public class TagServiceImpl implements TagService {
             tag.setSlug(name.toLowerCase().replaceAll("\\s+", "-"));
         }
         if (tag.getColor() == null || tag.getColor().trim().isEmpty()) {
-            tag.setColor("#409EFF");
+            tag.setColor(TAG_COLORS[RANDOM.nextInt(TAG_COLORS.length)]);
         }
         Tag existsByName = tagMapper.selectOne(new LambdaQueryWrapper<Tag>().eq(Tag::getName, name));
         if (existsByName != null) {
