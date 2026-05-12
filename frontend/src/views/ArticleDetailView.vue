@@ -55,6 +55,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import dayjs from 'dayjs'
 import DOMPurify from 'dompurify'
+import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import renderMathInElement from 'katex/contrib/auto-render'
 import { getArticleById } from '@/api/article'
@@ -69,11 +70,31 @@ const loading = ref(true)
 const articleBodyRef = ref(null)
 
 const sanitizedContent = computed(() => {
-  return article.value?.content ? DOMPurify.sanitize(article.value.content) : ''
+  return article.value?.content ? DOMPurify.sanitize(article.value.content, {
+    ADD_ATTR: ['data-w-e-type', 'data-w-e-is-void', 'data-w-e-is-inline', 'data-value']
+  }) : ''
 })
+
+const renderFormulaSpans = (container) => {
+  const spans = container.querySelectorAll('[data-w-e-type="formula"]')
+  spans.forEach(span => {
+    const latex = span.getAttribute('data-value')
+    if (!latex) return
+    const isInline = span.hasAttribute('data-w-e-is-inline')
+    try {
+      katex.render(latex, span, {
+        displayMode: !isInline,
+        throwOnError: false
+      })
+    } catch (e) {
+      span.textContent = latex
+    }
+  })
+}
 
 watch(sanitizedContent, () => {
   if (!articleBodyRef.value) return
+  renderFormulaSpans(articleBodyRef.value)
   renderMathInElement(articleBodyRef.value, {
     delimiters: [
       { left: '$$', right: '$$', display: true },
@@ -82,6 +103,7 @@ watch(sanitizedContent, () => {
       { left: '\\[', right: '\\]', display: true }
     ],
     ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+    ignoredClasses: ['katex'],
     throwOnError: false
   })
 }, { flush: 'post' })

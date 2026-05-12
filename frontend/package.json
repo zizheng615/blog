@@ -12,6 +12,7 @@
     "@element-plus/icons-vue": "^2.3.2",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
+    "@wangeditor/plugin-formula": "^1.0.11",
     "axios": "^1.16.0",
     "dayjs": "^1.11.20",
     "dompurify": "^3.4.2",
