@@ -276,16 +276,21 @@ defineExpose({ open })
   width: 100%;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
-  overflow: hidden;
 }
 
 .editor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #fff;
   border-bottom: 1px solid #dcdfe6;
+  border-radius: 4px 4px 0 0;
 }
 
 .editor-body {
   height: 400px;
   overflow-y: auto;
+  border-radius: 0 0 4px 4px;
 }
 
 .tag-control {
