@@ -58,6 +58,8 @@ import DOMPurify from 'dompurify'
 import katex from 'katex'
 import 'katex/dist/katex.min.css'
 import renderMathInElement from 'katex/contrib/auto-render'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
 import { getArticleById } from '@/api/article'
 import { recordVisit } from '@/api/visitor'
 import { readableColor, rgbaBg } from '@/utils/color'
@@ -95,6 +97,10 @@ const renderFormulaSpans = (container) => {
 watch(sanitizedContent, () => {
   if (!articleBodyRef.value) return
   renderFormulaSpans(articleBodyRef.value)
+  // Syntax-highlight code blocks
+  articleBodyRef.value.querySelectorAll('pre code').forEach((block) => {
+    try { hljs.highlightElement(block) } catch (e) { /* best-effort */ }
+  })
   renderMathInElement(articleBodyRef.value, {
     delimiters: [
       { left: '$$', right: '$$', display: true },

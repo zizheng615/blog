@@ -96,14 +96,35 @@
           />
         </div>
         <div v-else class="markdown-wrapper">
-          <el-input
-            v-model="form.contentMd"
-            type="textarea"
-            :rows="18"
-            placeholder="使用 Markdown 语法书写，支持 $x^2$ 和 $$\int_0^1 x dx$$ 公式..."
-            resize="none"
-            class="markdown-textarea"
-          />
+          <div class="markdown-edit-pane">
+            <div class="markdown-toolbar">
+              <el-button
+                size="small"
+                @click="triggerMdImageUpload"
+                :loading="mdImageUploading"
+                :icon="UploadFilled"
+              >
+                上传图片
+              </el-button>
+              <input
+                ref="mdImageInputRef"
+                type="file"
+                accept="image/*"
+                style="display:none"
+                @change="onMdImageSelected"
+              />
+              <span class="markdown-toolbar-hint">支持 ![alt](url) 直接引用外链</span>
+            </div>
+            <el-input
+              ref="mdTextareaRef"
+              v-model="form.contentMd"
+              type="textarea"
+              :rows="18"
+              placeholder="使用 Markdown 语法书写，支持 $x^2$ 和 $$\int_0^1 x dx$$ 公式..."
+              resize="none"
+              class="markdown-textarea"
+            />
+          </div>
           <div class="markdown-preview-wrapper">
             <div class="markdown-preview-label">实时预览</div>
             <div ref="markdownPreviewRef" class="markdown-preview" v-html="markdownPreview"></div>
@@ -132,12 +153,16 @@
 <script setup>
 import { ref, reactive, computed, shallowRef, watch, onBeforeUnmount, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { UploadFilled } from '@element-plus/icons-vue'
+import axios from 'axios'
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { Boot } from '@wangeditor/editor'
 import formulaModule from '@wangeditor/plugin-formula'
 import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
+import hljs from 'highlight.js'
+import 'highlight.js/styles/github.css'
 import 'katex/dist/katex.min.css'
 import renderMathInElement from 'katex/contrib/auto-render'
 import { createArticle, updateArticle } from '@/api/article'
@@ -407,15 +432,72 @@ const form = reactive({
 })
 
 const markdownPreviewRef = ref(null)
+const mdTextareaRef = ref(null)
+const mdImageInputRef = ref(null)
+const mdImageUploading = ref(false)
+
 const markdownPreview = computed(() => {
   if (form.editorMode !== 'MARKDOWN' || !form.contentMd) return ''
   return DOMPurify.sanitize(mdParser.render(form.contentMd))
 })
 
+const insertMarkdownAtCursor = (text) => {
+  const wrapper = mdTextareaRef.value
+  const textareaEl = wrapper?.textarea || wrapper?.$el?.querySelector('textarea')
+  if (!textareaEl) {
+    form.contentMd = (form.contentMd || '') + text
+    return
+  }
+  const start = textareaEl.selectionStart ?? form.contentMd.length
+  const end = textareaEl.selectionEnd ?? form.contentMd.length
+  const before = (form.contentMd || '').substring(0, start)
+  const after = (form.contentMd || '').substring(end)
+  form.contentMd = before + text + after
+  nextTick(() => {
+    textareaEl.focus()
+    const pos = start + text.length
+    textareaEl.selectionStart = textareaEl.selectionEnd = pos
+  })
+}
+
+const triggerMdImageUpload = () => {
+  mdImageInputRef.value?.click()
+}
+
+const onMdImageSelected = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  mdImageUploading.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const token = localStorage.getItem('token')
+    const { data: resp } = await axios.post('/api/v1/admin/upload/image', fd, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (resp.errno === 0 && resp.data?.url) {
+      const alt = file.name.replace(/\.[^.]+$/, '')
+      insertMarkdownAtCursor(`![${alt}](${resp.data.url})`)
+      ElMessage.success('图片已插入')
+    } else {
+      ElMessage.error(resp.message || '上传失败')
+    }
+  } catch (err) {
+    ElMessage.error(err.response?.data?.message || '上传失败')
+  } finally {
+    mdImageUploading.value = false
+    if (e.target) e.target.value = ''  // allow same file re-select
+  }
+}
+
 watch(markdownPreview, () => {
   if (!markdownPreviewRef.value) return
   nextTick(() => {
     if (!markdownPreviewRef.value) return
+    // Syntax-highlight code blocks
+    markdownPreviewRef.value.querySelectorAll('pre code').forEach((block) => {
+      try { hljs.highlightElement(block) } catch (e) { /* best-effort */ }
+    })
     try {
       renderMathInElement(markdownPreviewRef.value, {
         delimiters: [
@@ -517,6 +599,25 @@ defineExpose({ open })
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   width: 100%;
+}
+
+.markdown-edit-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.markdown-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 4px;
+}
+
+.markdown-toolbar-hint {
+  font-size: 0.78em;
+  color: #909399;
 }
 
 .markdown-textarea {
