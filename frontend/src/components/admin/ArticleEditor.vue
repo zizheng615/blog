@@ -121,6 +121,21 @@
                 style="display:none"
                 @change="onMdImageSelected"
               />
+              <el-button
+                size="small"
+                @click="triggerMdVideoUpload"
+                :loading="mdVideoUploading"
+                :icon="VideoPlay"
+              >
+                上传视频
+              </el-button>
+              <input
+                ref="mdVideoInputRef"
+                type="file"
+                accept="video/*"
+                style="display:none"
+                @change="onMdVideoSelected"
+              />
               <span class="markdown-toolbar-hint">支持 ![alt](url) 直接引用外链</span>
             </div>
             <el-input
@@ -161,7 +176,7 @@
 <script setup>
 import { ref, reactive, computed, shallowRef, watch, onBeforeUnmount, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UploadFilled, Delete } from '@element-plus/icons-vue'
+import { UploadFilled, Delete, VideoPlay } from '@element-plus/icons-vue'
 import axios from 'axios'
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
@@ -466,6 +481,8 @@ const markdownPreviewRef = ref(null)
 const mdTextareaRef = ref(null)
 const mdImageInputRef = ref(null)
 const mdImageUploading = ref(false)
+const mdVideoInputRef = ref(null)
+const mdVideoUploading = ref(false)
 
 const markdownPreview = computed(() => {
   if (form.editorMode !== 'MARKDOWN' || !form.contentMd) return ''
@@ -521,6 +538,35 @@ const onMdImageSelected = async (e) => {
   } finally {
     mdImageUploading.value = false
     if (e.target) e.target.value = ''  // allow same file re-select
+  }
+}
+
+const triggerMdVideoUpload = () => {
+  mdVideoInputRef.value?.click()
+}
+
+const onMdVideoSelected = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  mdVideoUploading.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const token = localStorage.getItem('token')
+    const { data: resp } = await axios.post('/api/v1/admin/upload/video', fd, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
+    if (resp.errno === 0 && resp.data?.url) {
+      insertMarkdownAtCursor(`<video src="${resp.data.url}" controls style="max-width:100%"></video>`)
+      ElMessage.success('视频已插入')
+    } else {
+      ElMessage.error(resp.message || '上传失败')
+    }
+  } catch (err) {
+    ElMessage.error(err.response?.data?.message || '上传失败')
+  } finally {
+    mdVideoUploading.value = false
+    if (e.target) e.target.value = ''
   }
 }
 

@@ -73,6 +73,27 @@
   }
 }
 
+// Video and iframe styles (shared by both article types)
+.article-tech,
+.article-life {
+  video,
+  iframe {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 1em 0;
+  }
+
+  video {
+    height: auto;
+  }
+
+  iframe {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    border: none;
+  }
+}
+
 // Life article styles
 .article-life {
   font-family: 'Georgia', 'Times New Roman', serif;

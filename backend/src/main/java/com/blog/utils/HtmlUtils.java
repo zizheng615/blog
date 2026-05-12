@@ -6,8 +6,6 @@ public class HtmlUtils {
 
     private static final Pattern SCRIPT_PATTERN = Pattern.compile(
         "<script[^>]*?>.*?</script>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern IFRAME_PATTERN = Pattern.compile(
-        "<iframe[^>]*?>.*?</iframe>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern OBJECT_PATTERN = Pattern.compile(
         "<object[^>]*?>.*?</object>", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern EVENT_PATTERN = Pattern.compile(
@@ -23,7 +21,6 @@ public class HtmlUtils {
         }
         String result = html;
         result = SCRIPT_PATTERN.matcher(result).replaceAll("");
-        result = IFRAME_PATTERN.matcher(result).replaceAll("");
         result = OBJECT_PATTERN.matcher(result).replaceAll("");
         result = EVENT_PATTERN.matcher(result).replaceAll("");
         result = JS_PROTOCOL.matcher(result).replaceAll("");
