@@ -167,11 +167,25 @@ const preprocessMathPaste = (html) => {
     return /\b(?:katex|mathjax|mwe-math|mjx|formula)/.test(cls)
   }
 
+  const insertFormulaNode = (target, latex, isDisplay) => {
+    if (isDisplay) {
+      const p = doc.createElement('p')
+      p.textContent = `$$${latex}$$`
+      target.replaceWith(p)
+    } else {
+      const span = doc.createElement('span')
+      span.setAttribute('data-w-e-type', 'formula')
+      span.setAttribute('data-w-e-is-void', '')
+      span.setAttribute('data-w-e-is-inline', '')
+      span.setAttribute('data-value', latex)
+      target.replaceWith(span)
+    }
+  }
+
+  // Handle <annotation encoding="application/x-tex"> (rendered KaTeX, MathJax v3, Wikipedia)
   doc.querySelectorAll('annotation[encoding="application/x-tex"]').forEach(ann => {
     const latex = (ann.textContent || '').trim()
     if (!latex) return
-    // Climb to the OUTERMOST math wrapper (handles Wikipedia's nested
-    // .mwe-math-element > .mwe-math-mathml-inline > math layout)
     let wrapper = ann.closest('math') || ann.parentElement
     while (wrapper?.parentElement && isMathContainer(wrapper.parentElement)) {
       wrapper = wrapper.parentElement
@@ -182,23 +196,29 @@ const preprocessMathPaste = (html) => {
       /\bdisplay\b/.test(wrapperCls) ||
       wrapper.getAttribute('display') === 'block' ||
       wrapper.getAttribute('display') === 'true'
-    if (isDisplay) {
-      const p = doc.createElement('p')
-      p.textContent = `$$${latex}$$`
-      wrapper.replaceWith(p)
-    } else {
-      const span = doc.createElement('span')
-      span.setAttribute('data-w-e-type', 'formula')
-      span.setAttribute('data-w-e-is-void', '')
-      span.setAttribute('data-w-e-is-inline', '')
-      span.setAttribute('data-value', latex)
-      wrapper.replaceWith(span)
-    }
+    insertFormulaNode(wrapper, latex, isDisplay)
+  })
+
+  // Handle MathJax v2 <script type="math/tex"> tags (raw source, common in older
+  // Hexo/Jekyll/Hugo blogs that use MathJax syntax even if rendered by KaTeX)
+  doc.querySelectorAll('script[type^="math/tex"]').forEach(script => {
+    let latex = (script.textContent || '').trim()
+    // Strip the MathJax v2 CDATA wrapper: %<![CDATA[ ... %]]>
+    latex = latex
+      .replace(/^%\s*<!\[CDATA\[\s*/, '')
+      .replace(/\s*%\]\]>\s*$/, '')
+      .trim()
+    if (!latex) return
+    const isDisplay = /mode=display/.test(script.getAttribute('type') || '')
+    // Some pages wrap display-mode scripts in a dedicated container; replace that
+    // whole container if present, otherwise just replace the script itself.
+    const wrapper = script.closest('.mathjax-wrapper, .MathJax_Display, .MathJax, span[id^="MathJax-Element"]') || script
+    insertFormulaNode(wrapper, latex, isDisplay)
   })
 
   // Aggressively drop any remaining math wrappers, MathML duplicates, fallback
-  // images, and aria-hidden visual layers. Anything we didn't extract LaTeX
-  // from is better lost than duplicated as garbled text.
+  // images, MathJax v2 previews/scripts, and aria-hidden visual layers. Anything
+  // we didn't extract LaTeX from is better lost than duplicated as garbled text.
   doc.querySelectorAll([
     'math',
     'mjx-assistive-mml',
@@ -209,11 +229,15 @@ const preprocessMathPaste = (html) => {
     '.katex-html',
     '.MathJax',
     '.MathJax_Display',
+    '.MathJax_Preview',
+    '.mathjax-wrapper',
+    'span[id^="MathJax-Element"]',
     '.mwe-math-element',
     '.mwe-math-mathml-inline',
     '.mwe-math-mathml-display',
     '.mwe-math-fallback-image-inline',
     '.mwe-math-fallback-image-display',
+    'script[type^="math/tex"]',
     '[aria-hidden="true"]'
   ].join(',')).forEach(n => n.remove())
 
@@ -294,7 +318,7 @@ const editorConfig = {
   customPaste(editor, event) {
     const html = event.clipboardData?.getData('text/html') || ''
     if (!html) return true
-    const looksLikeMath = /\bkatex\b|\bMathJax\b|<mjx-|<annotation\b|<math[\s>]/i.test(html)
+    const looksLikeMath = /katex|mathjax|<mjx-|<annotation|<math[\s>]|math\/tex/i.test(html)
     if (!looksLikeMath) return true
     try {
       const cleaned = preprocessMathPaste(html)
