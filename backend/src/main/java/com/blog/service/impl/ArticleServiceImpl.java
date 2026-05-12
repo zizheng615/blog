@@ -140,7 +140,9 @@ public class ArticleServiceImpl implements ArticleService {
 
     private void clearArticleCache() {
         redisCache.deleteByPattern(ARTICLE_LIST_KEY + ":*");
-        log.info("All article list cache cleared");
+        redisCache.delete("tag:all");
+        redisCache.delete("category:all");
+        log.info("Article list, tag, and category caches cleared");
     }
 
     private void saveArticleTags(Long articleId, List<Long> tagIds) {
