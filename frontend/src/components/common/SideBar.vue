@@ -6,7 +6,7 @@
       </h3>
       <div class="category-list">
         <router-link
-          v-for="cat in categories"
+          v-for="cat in visibleCategories"
           :key="cat.id"
           :to="`/articles?categoryId=${cat.id}`"
           class="category-item"
@@ -23,7 +23,7 @@
       </h3>
       <div class="tag-cloud">
         <router-link
-          v-for="tag in tags"
+          v-for="tag in visibleTags"
           :key="tag.id"
           :to="`/articles?tagId=${tag.id}`"
           class="tag-item"
@@ -38,13 +38,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getCategories } from '@/api/category'
 import { getTags } from '@/api/tag'
 import { readableColor, rgbaBg, rgbaBorder } from '@/utils/color'
 
 const categories = ref([])
 const tags = ref([])
+
+const visibleCategories = computed(() =>
+  categories.value.filter(c => (c.articleCount || 0) > 0)
+)
+const visibleTags = computed(() =>
+  tags.value.filter(t => (t.articleCount || 0) > 0)
+)
 
 const tagStyle = (color) => ({
   backgroundColor: rgbaBg(color, 0.14),

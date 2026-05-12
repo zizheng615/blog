@@ -9,4 +9,5 @@ public interface TagService {
     Tag getById(Long id);
     Tag getBySlug(String slug);
     Tag create(Tag tag);
+    void delete(Long id);
 }

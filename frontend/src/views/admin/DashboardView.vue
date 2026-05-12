@@ -102,10 +102,8 @@ const openEditor = (article = null) => {
   editorRef.value?.open(article)
 }
 
-const onTagsUpdated = (newTag) => {
-  if (newTag && !tags.value.some(t => t.id === newTag.id)) {
-    tags.value = [...tags.value, newTag]
-  }
+const onTagsUpdated = () => {
+  loadMeta()
 }
 
 const handleDelete = async (id) => {

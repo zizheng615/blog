@@ -56,6 +56,19 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    public void delete(Long id) {
+        Tag tag = tagMapper.selectById(id);
+        if (tag == null) {
+            throw new BlogException(ErrorCode.BAD_REQUEST.getCode(), "标签不存在");
+        }
+        tagMapper.deleteById(id);
+        redisCache.delete(TAG_ALL_KEY);
+        redisCache.deleteByPattern("article:list:*");
+        redisCache.deleteByPattern("article:detail:*");
+        log.info("Tag deleted: id={}, name={}", id, tag.getName());
+    }
+
+    @Override
     public Tag create(Tag tag) {
         String name = tag.getName().trim();
         tag.setName(name);

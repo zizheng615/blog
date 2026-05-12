@@ -44,7 +44,15 @@
               :key="tag.id"
               :label="tag.name"
               :value="tag.id"
-            />
+            >
+              <div class="tag-option-row">
+                <span class="tag-option-name">{{ tag.name }}</span>
+                <span class="tag-option-count">{{ tag.articleCount || 0 }} 篇</span>
+                <el-icon class="tag-option-delete" @click.stop.prevent="confirmDeleteTag(tag)">
+                  <Delete />
+                </el-icon>
+              </div>
+            </el-option>
           </el-select>
           <el-input
             v-model="newTagName"
@@ -153,7 +161,7 @@
 <script setup>
 import { ref, reactive, computed, shallowRef, watch, onBeforeUnmount, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { UploadFilled } from '@element-plus/icons-vue'
+import { UploadFilled, Delete } from '@element-plus/icons-vue'
 import axios from 'axios'
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
@@ -166,7 +174,7 @@ import 'highlight.js/styles/github.css'
 import 'katex/dist/katex.min.css'
 import renderMathInElement from 'katex/contrib/auto-render'
 import { createArticle, updateArticle } from '@/api/article'
-import { createTag } from '@/api/tag'
+import { createTag, deleteTag } from '@/api/tag'
 
 const mdParser = new MarkdownIt({ html: true, linkify: true, breaks: false })
 
@@ -336,6 +344,29 @@ const addNewTag = async () => {
     ElMessage.error(e.response?.data?.message || '标签创建失败')
   } finally {
     addingTag.value = false
+  }
+}
+
+const confirmDeleteTag = async (tag) => {
+  const count = tag.articleCount || 0
+  const tip = count > 0
+    ? `标签「${tag.name}」关联了 ${count} 篇文章，删除后这些文章将不再包含此标签，确认删除？`
+    : `确定删除标签「${tag.name}」？`
+  try {
+    await ElMessageBox.confirm(tip, '删除标签', {
+      confirmButtonText: '删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    await deleteTag(tag.id)
+    localTags.value = localTags.value.filter(t => t.id !== tag.id)
+    form.tagIds = form.tagIds.filter(id => id !== tag.id)
+    emit('tags-updated', { deleted: true, id: tag.id })
+    ElMessage.success('标签已删除')
+  } catch (e) {
+    if (e !== 'cancel') {
+      ElMessage.error(e.response?.data?.message || '删除失败')
+    }
   }
 }
 
@@ -703,6 +734,38 @@ defineExpose({ open })
 .tag-input {
   flex: 1 1 220px;
   min-width: 180px;
+}
+
+.tag-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-right: 8px;
+}
+
+.tag-option-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tag-option-count {
+  font-size: 0.78em;
+  color: #909399;
+  flex-shrink: 0;
+}
+
+.tag-option-delete {
+  flex-shrink: 0;
+  color: #a8abb2;
+  cursor: pointer;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #f56c6c;
+  }
 }
 
 :deep(.w-e-text-container) {
