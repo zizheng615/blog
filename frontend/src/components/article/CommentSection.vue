@@ -2,7 +2,7 @@
   <div class="comment-section">
     <h3 class="section-title">
       <el-icon><ChatLineRound /></el-icon>
-      评论 ({{ comments.length }})
+      评论 ({{ totalCommentCount }})
     </h3>
 
     <div class="comment-form">
@@ -66,7 +66,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { getComments, createComment } from '@/api/comment'
@@ -78,6 +78,14 @@ const props = defineProps({
 const comments = ref([])
 const submitting = ref(false)
 const form = ref({ nickname: '', email: '', content: '' })
+
+const totalCommentCount = computed(() => {
+  let count = comments.value.length
+  for (const c of comments.value) {
+    count += c.replies?.length || 0
+  }
+  return count
+})
 
 const loadComments = async () => {
   try {
