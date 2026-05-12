@@ -53,6 +53,7 @@
       :categories="categories"
       :tags="tags"
       @success="loadArticles"
+      @tags-updated="onTagsUpdated"
     />
   </div>
 </template>
@@ -99,6 +100,12 @@ const loadMeta = async () => {
 
 const openEditor = (article = null) => {
   editorRef.value?.open(article)
+}
+
+const onTagsUpdated = (newTag) => {
+  if (newTag && !tags.value.some(t => t.id === newTag.id)) {
+    tags.value = [...tags.value, newTag]
+  }
 }
 
 const handleDelete = async (id) => {

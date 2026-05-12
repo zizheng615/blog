@@ -1,6 +1,8 @@
 package com.blog.service.impl;
 
 import com.blog.entity.Tag;
+import com.blog.exception.BlogException;
+import com.blog.exception.ErrorCode;
 import com.blog.mapper.TagMapper;
 import com.blog.service.TagService;
 import com.blog.utils.RedisCache;
@@ -51,5 +53,29 @@ public class TagServiceImpl implements TagService {
     public Tag getBySlug(String slug) {
         return tagMapper.selectOne(new LambdaQueryWrapper<Tag>()
                 .eq(Tag::getSlug, slug));
+    }
+
+    @Override
+    public Tag create(Tag tag) {
+        String name = tag.getName().trim();
+        tag.setName(name);
+        if (tag.getSlug() == null || tag.getSlug().trim().isEmpty()) {
+            tag.setSlug(name.toLowerCase().replaceAll("\\s+", "-"));
+        }
+        if (tag.getColor() == null || tag.getColor().trim().isEmpty()) {
+            tag.setColor("#409EFF");
+        }
+        Tag existsByName = tagMapper.selectOne(new LambdaQueryWrapper<Tag>().eq(Tag::getName, name));
+        if (existsByName != null) {
+            throw new BlogException(ErrorCode.BAD_REQUEST.getCode(), "标签 \"" + name + "\" 已存在");
+        }
+        Tag existsBySlug = tagMapper.selectOne(new LambdaQueryWrapper<Tag>().eq(Tag::getSlug, tag.getSlug()));
+        if (existsBySlug != null) {
+            throw new BlogException(ErrorCode.BAD_REQUEST.getCode(), "标签别名 \"" + tag.getSlug() + "\" 已存在");
+        }
+        tagMapper.insert(tag);
+        redisCache.delete(TAG_ALL_KEY);
+        log.info("Tag created, cache cleared. id={}, name={}", tag.getId(), tag.getName());
+        return tag;
     }
 }

@@ -8,4 +8,5 @@ public interface TagService {
     List<Tag> listByArticleId(Long articleId);
     Tag getById(Long id);
     Tag getBySlug(String slug);
+    Tag create(Tag tag);
 }

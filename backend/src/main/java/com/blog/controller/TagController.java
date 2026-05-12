@@ -2,12 +2,16 @@ package com.blog.controller;
 
 import com.blog.entity.Article;
 import com.blog.entity.Tag;
+import com.blog.exception.BlogException;
+import com.blog.exception.ErrorCode;
 import com.blog.service.ArticleService;
 import com.blog.service.TagService;
 import com.blog.utils.Result;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,5 +38,14 @@ public class TagController {
             return Result.success(Collections.emptyList());
         }
         return Result.success(articleService.listByTagId(tag.getId()));
+    }
+
+    @PostMapping("/admin/tags")
+    public Result<Tag> create(@RequestBody Tag tag) {
+        if (tag.getName() == null || tag.getName().trim().isEmpty()) {
+            throw new BlogException(ErrorCode.BAD_REQUEST.getCode(), "标签名不能为空");
+        }
+        tag.setName(tag.getName().trim());
+        return Result.success(tagService.create(tag));
     }
 }

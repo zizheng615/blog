@@ -29,14 +29,15 @@
 
           <div class="article-footer">
             <div class="tags">
-              <span
+              <router-link
                 v-for="tag in article.tags"
                 :key="tag.id"
+                :to="{ path: '/articles', query: { tagId: tag.id } }"
                 class="tag"
                 :style="tagStyle(tag.color)"
               >
                 #{{ tag.name }}
-              </span>
+              </router-link>
             </div>
           </div>
 
@@ -193,6 +194,14 @@ onMounted(loadArticle)
       font-size: 0.9em;
       padding: 4px 12px;
       border-radius: 4px;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      }
     }
   }
 }

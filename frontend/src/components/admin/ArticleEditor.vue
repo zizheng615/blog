@@ -31,14 +31,38 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item label="标签">
-        <el-select v-model="form.tagIds" multiple placeholder="选择标签" style="width: 100%">
-          <el-option
-            v-for="tag in tags"
-            :key="tag.id"
-            :label="tag.name"
-            :value="tag.id"
-          />
-        </el-select>
+        <div class="tag-control">
+          <el-select
+            v-model="form.tagIds"
+            multiple
+            filterable
+            placeholder="选择标签"
+            class="tag-select"
+          >
+            <el-option
+              v-for="tag in localTags"
+              :key="tag.id"
+              :label="tag.name"
+              :value="tag.id"
+            />
+          </el-select>
+          <el-input
+            v-model="newTagName"
+            placeholder="输入名称后回车新建"
+            class="tag-input"
+            @keyup.enter.prevent="addNewTag"
+          >
+            <template #append>
+              <el-button
+                @click="addNewTag"
+                :loading="addingTag"
+                :disabled="!newTagName.trim()"
+              >
+                新建
+              </el-button>
+            </template>
+          </el-input>
+        </div>
       </el-form-item>
       <el-form-item label="摘要">
         <el-input
@@ -81,24 +105,56 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, shallowRef, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, shallowRef, watch, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { createArticle, updateArticle } from '@/api/article'
+import { createTag } from '@/api/tag'
 
 const props = defineProps({
   categories: { type: Array, default: () => [] },
   tags: { type: Array, default: () => [] }
 })
 
-const emit = defineEmits(['success'])
+const emit = defineEmits(['success', 'tags-updated'])
 
 const visible = ref(false)
 const loading = ref(false)
 const isEdit = ref(false)
 const formRef = ref()
 const editorRef = shallowRef()
+
+const localTags = ref([])
+const newTagName = ref('')
+const addingTag = ref(false)
+watch(() => props.tags, (val) => {
+  localTags.value = [...(val || [])]
+}, { immediate: true })
+
+const addNewTag = async () => {
+  const name = newTagName.value.trim()
+  if (!name) return
+  if (localTags.value.some(t => t.name === name)) {
+    ElMessage.warning('标签已存在')
+    return
+  }
+  addingTag.value = true
+  try {
+    const newTag = await createTag({ name })
+    localTags.value = [...localTags.value, newTag]
+    if (!form.tagIds.includes(newTag.id)) {
+      form.tagIds.push(newTag.id)
+    }
+    newTagName.value = ''
+    emit('tags-updated', newTag)
+    ElMessage.success('标签已创建')
+  } catch (e) {
+    ElMessage.error(e.response?.data?.message || '标签创建失败')
+  } finally {
+    addingTag.value = false
+  }
+}
 
 const viewportWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1200)
 const onResize = () => { viewportWidth.value = window.innerWidth }
@@ -232,6 +288,23 @@ defineExpose({ open })
   overflow-y: auto;
 }
 
+.tag-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.tag-select {
+  flex: 1 1 60%;
+  min-width: 0;
+}
+
+.tag-input {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+
 :deep(.w-e-text-container) {
   height: 100% !important;
 }
@@ -243,6 +316,11 @@ defineExpose({ open })
 @media (max-width: 768px) {
   .editor-body {
     height: 320px;
+  }
+
+  .tag-select,
+  .tag-input {
+    flex: 1 1 100%;
   }
 }
 </style>
