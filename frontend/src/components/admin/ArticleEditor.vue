@@ -158,19 +158,30 @@ if (!window.__blogFormulaRegistered) {
 
 const preprocessMathPaste = (html) => {
   const doc = new DOMParser().parseFromString(html, 'text/html')
-  const annotations = doc.querySelectorAll('annotation[encoding="application/x-tex"]')
-  annotations.forEach(ann => {
+
+  const isMathContainer = (el) => {
+    if (!el || el.nodeType !== 1) return false
+    const tag = el.tagName?.toLowerCase()
+    if (tag === 'mjx-container' || tag === 'math') return true
+    const cls = (el.getAttribute('class') || '').toLowerCase()
+    return /\b(?:katex|mathjax|mwe-math|mjx|formula)/.test(cls)
+  }
+
+  doc.querySelectorAll('annotation[encoding="application/x-tex"]').forEach(ann => {
     const latex = (ann.textContent || '').trim()
     if (!latex) return
-    let wrapper = ann.closest('.katex-display, .katex, .MathJax_Display, .MathJax, mjx-container, math')
-    if (!wrapper) wrapper = ann.parentElement
+    // Climb to the OUTERMOST math wrapper (handles Wikipedia's nested
+    // .mwe-math-element > .mwe-math-mathml-inline > math layout)
+    let wrapper = ann.closest('math') || ann.parentElement
+    while (wrapper?.parentElement && isMathContainer(wrapper.parentElement)) {
+      wrapper = wrapper.parentElement
+    }
     if (!wrapper) return
+    const wrapperCls = (wrapper.getAttribute('class') || '').toLowerCase()
     const isDisplay =
-      wrapper.classList.contains('katex-display') ||
-      wrapper.classList.contains('MathJax_Display') ||
+      /\bdisplay\b/.test(wrapperCls) ||
       wrapper.getAttribute('display') === 'block' ||
-      wrapper.getAttribute('display') === 'true' ||
-      !!wrapper.closest('.katex-display, .MathJax_Display')
+      wrapper.getAttribute('display') === 'true'
     if (isDisplay) {
       const p = doc.createElement('p')
       p.textContent = `$$${latex}$$`
@@ -184,8 +195,28 @@ const preprocessMathPaste = (html) => {
       wrapper.replaceWith(span)
     }
   })
-  // Drop residual MathML / aria nodes that would otherwise paste as duplicated text
-  doc.querySelectorAll('math, mjx-assistive-mml, .katex-mathml, .katex-html, [aria-hidden="true"]').forEach(n => n.remove())
+
+  // Aggressively drop any remaining math wrappers, MathML duplicates, fallback
+  // images, and aria-hidden visual layers. Anything we didn't extract LaTeX
+  // from is better lost than duplicated as garbled text.
+  doc.querySelectorAll([
+    'math',
+    'mjx-assistive-mml',
+    'mjx-container',
+    '.katex',
+    '.katex-display',
+    '.katex-mathml',
+    '.katex-html',
+    '.MathJax',
+    '.MathJax_Display',
+    '.mwe-math-element',
+    '.mwe-math-mathml-inline',
+    '.mwe-math-mathml-display',
+    '.mwe-math-fallback-image-inline',
+    '.mwe-math-fallback-image-display',
+    '[aria-hidden="true"]'
+  ].join(',')).forEach(n => n.remove())
+
   return doc.body.innerHTML
 }
 
