@@ -181,7 +181,7 @@ export default {
     return { count, double }
   }
 }</code></pre><p>通过组合式函数，我们可以更好地复用逻辑。</p>',
-1, 1, 'TECH', 'PUBLISHED', 96, 2, FALSE, '2024-02-20 14:30:00'),
+1, 1, 'TECH', 'PUBLISHED', 96, 1, FALSE, '2024-02-20 14:30:00'),
 
 ('MySQL 性能优化实战', 'mysql-performance-optimization',
 '数据库性能优化是后端开发的核心技能之一，本文分享一些常用的 MySQL 优化技巧和实践经验。',
@@ -192,7 +192,7 @@ EXPLAIN SELECT * FROM article WHERE category_id = 1;
 SELECT id, title, summary FROM article
 WHERE category_id = 1 AND status = ''PUBLISHED''
 ORDER BY published_at DESC LIMIT 10;</code></pre>',
-1, 1, 'TECH', 'PUBLISHED', 75, 1, FALSE, '2024-03-10 09:00:00'),
+1, 1, 'TECH', 'PUBLISHED', 75, 0, FALSE, '2024-03-10 09:00:00'),
 
 ('Spring Security + JWT 实现认证授权', 'spring-security-jwt',
 'Spring Security 是 Spring 生态中强大的安全框架，结合 JWT 可以实现无状态的认证授权机制。',
@@ -211,7 +211,7 @@ public class JwtTokenProvider {
             .compact();
     }
 }</code></pre>',
-1, 1, 'TECH', 'PUBLISHED', 156, 4, TRUE, '2024-04-05 16:00:00'),
+1, 1, 'TECH', 'PUBLISHED', 156, 2, TRUE, '2024-04-05 16:00:00'),
 
 ('Docker 容器化部署实践', 'docker-deployment',
 'Docker 让应用部署变得简单高效，本文介绍如何将 Spring Boot 应用容器化并部署到生产环境。',
@@ -224,7 +224,7 @@ docker build -t blog-backend .
 
 # 运行容器
 docker run -p 8080:8080 blog-backend</code></pre>',
-1, 1, 'TECH', 'PUBLISHED', 89, 2, FALSE, '2024-05-12 11:00:00');
+1, 1, 'TECH', 'PUBLISHED', 89, 0, FALSE, '2024-05-12 11:00:00');
 
 -- Life Articles
 INSERT INTO `article` (`title`, `slug`, `summary`, `content`, `category_id`, `author_id`, `article_type`, `status`, `view_count`, `comment_count`, `is_top`, `published_at`) VALUES
@@ -236,12 +236,12 @@ INSERT INTO `article` (`title`, `slug`, `summary`, `content`, `category_id`, `au
 ('深夜食堂：一碗拉面的温暖', 'midnight-ramen',
 '加班到深夜，街角的小面馆依然亮着灯。一碗热气腾腾的拉面，温暖了疲惫的身心。',
 '<p>城市的夜晚总是灯火通明，但最温暖的，莫过于街角那盏为夜归人亮着的灯。</p><div style="text-align: center; margin: 30px 0;"><p>🍜 深夜的拉面，是最简单的幸福</p></div><p>推开门，暖黄色的灯光映入眼帘。老板微笑着问："还是老样子？"我点点头，找了个靠窗的位置坐下。</p><p>不一会儿，一碗热气腾腾的拉面端了上来。浓郁的汤底、劲道的面条、溏心蛋、叉烧肉、葱花... 简单的食材，却组成了最治愈的味道。</p><p>在这个快节奏的城市里，这样的小店就像一个小小的港湾，让每一个疲惫的灵魂都能找到归属感。</p>',
-2, 1, 'LIFE', 'PUBLISHED', 45, 1, FALSE, '2024-04-18 22:00:00'),
+2, 1, 'LIFE', 'PUBLISHED', 45, 0, FALSE, '2024-04-18 22:00:00'),
 
 ('读《人类简史》：思考的力量', 'sapiens-reading',
 '尤瓦尔·赫拉利的《人类简史》让我重新审视人类文明的发展，思维的边界远比想象中更广阔。',
 '<p>用了两周的时间读完了《人类简史》，这本书带给我太多震撼和思考。</p><h3>认知革命</h3><p>赫拉利提出，人类之所以能从众多物种中脱颖而出，关键在于我们拥有"想象"的能力。我们能够相信一些不存在的事物——国家、宗教、货币、公司... 这些"虚构的故事"让人类能够大规模协作。</p><div style="text-align: center; margin: 30px 0;"><p>📚 阅读，是与伟大思想的对话</p></div><h3>农业革命</h3><p>农业革命被作者称为"史上最大的骗局"。人类从狩猎采集到农耕定居，看似获得了稳定的食物来源，实则付出了更多的劳动和更不均衡的营养。</p><p>这本书让我学会了用更宏观、更批判的视角看待历史和我们所处的世界。</p>',
-2, 1, 'LIFE', 'PUBLISHED', 38, 1, FALSE, '2024-05-01 15:00:00'),
+2, 1, 'LIFE', 'PUBLISHED', 38, 0, FALSE, '2024-05-01 15:00:00'),
 
 ('雨天的周末：一本好书一杯茶', 'rainy-weekend',
 '窗外细雨绵绵，屋内茶香袅袅。这样的周末，最适合窝在沙发里，读本好书。',
