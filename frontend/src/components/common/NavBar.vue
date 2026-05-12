@@ -7,10 +7,22 @@
       </router-link>
 
       <div class="nav-links" :class="{ open: menuOpen }">
-        <router-link to="/articles?type=TECH" class="nav-link">
+        <router-link
+          :to="{ path: '/articles', query: { type: 'TECH' } }"
+          class="nav-link"
+          :class="{ 'is-active': isTypeActive('TECH') }"
+          active-class=""
+          exact-active-class=""
+        >
           <el-icon><Cpu /></el-icon>技术文章
         </router-link>
-        <router-link to="/articles?type=LIFE" class="nav-link">
+        <router-link
+          :to="{ path: '/articles', query: { type: 'LIFE' } }"
+          class="nav-link"
+          :class="{ 'is-active': isTypeActive('LIFE') }"
+          active-class=""
+          exact-active-class=""
+        >
           <el-icon><Coffee /></el-icon>生活分享
         </router-link>
         <router-link to="/contact" class="nav-link">
@@ -27,7 +39,10 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 const menuOpen = ref(false)
+const route = useRoute()
+const isTypeActive = (type) => route.path === '/articles' && route.query.type === type
 </script>
 
 <style lang="scss" scoped>
@@ -81,7 +96,7 @@ const menuOpen = ref(false)
   color: #606266;
   transition: all 0.3s;
 
-  &:hover, &.router-link-active {
+  &:hover, &.router-link-active, &.is-active {
     background: #ecf5ff;
     color: #409eff;
   }
