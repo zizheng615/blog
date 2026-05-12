@@ -22,6 +22,7 @@
           </div>
 
           <div
+            ref="articleBodyRef"
             class="article-body"
             :class="article.articleType === 'TECH' ? 'article-tech' : 'article-life'"
             v-html="sanitizedContent"
@@ -50,10 +51,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import dayjs from 'dayjs'
 import DOMPurify from 'dompurify'
+import 'katex/dist/katex.min.css'
+import renderMathInElement from 'katex/contrib/auto-render'
 import { getArticleById } from '@/api/article'
 import { recordVisit } from '@/api/visitor'
 import { readableColor, rgbaBg } from '@/utils/color'
@@ -63,10 +66,25 @@ import SideBar from '@/components/common/SideBar.vue'
 const route = useRoute()
 const article = ref(null)
 const loading = ref(true)
+const articleBodyRef = ref(null)
 
 const sanitizedContent = computed(() => {
   return article.value?.content ? DOMPurify.sanitize(article.value.content) : ''
 })
+
+watch(sanitizedContent, () => {
+  if (!articleBodyRef.value) return
+  renderMathInElement(articleBodyRef.value, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '$', right: '$', display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+    throwOnError: false
+  })
+}, { flush: 'post' })
 
 const tagStyle = (color) => ({
   color: readableColor(color),
