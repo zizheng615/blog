@@ -99,7 +99,7 @@ const submitComment = async () => {
   submitting.value = true
   try {
     await createComment(props.articleId, form.value)
-    ElMessage.success('评论成功')
+    ElMessage.success('评论已提交，审核通过后将显示')
     form.value = { nickname: '', email: '', content: '' }
     await loadComments()
   } catch (e) {

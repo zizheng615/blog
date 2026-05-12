@@ -30,7 +30,7 @@
       <el-table-column label="操作" width="180" fixed="right">
         <template #default="{ row }">
           <el-button
-            v-if="row.status === 'PENDING'"
+            v-if="row.status !== 'APPROVED'"
             type="success"
             size="small"
             @click="handleStatus(row.id, 'APPROVED')"
@@ -50,9 +50,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { getAdminComments, updateCommentStatus, deleteComment } from '@/api/comment'
+
+const router = useRouter()
 
 const comments = ref([])
 const loading = ref(false)
@@ -72,7 +75,7 @@ const handleStatus = async (id, status) => {
   try {
     await updateCommentStatus(id, status)
     ElMessage.success('状态更新成功')
-    loadComments()
+    await loadComments()
   } catch (e) {
     ElMessage.error('操作失败')
   }
@@ -91,12 +94,12 @@ const handleDelete = async (id) => {
 
 const statusLabel = (status) => {
   const map = { PENDING: '待审核', APPROVED: '已通过', SPAM: '垃圾' }
-  return map[status] || status
+  return map[status] || '待审核'
 }
 
 const statusType = (status) => {
   const map = { PENDING: 'warning', APPROVED: 'success', SPAM: 'danger' }
-  return map[status] || 'info'
+  return map[status] || 'warning'
 }
 
 const formatDate = (date) => {
@@ -104,7 +107,7 @@ const formatDate = (date) => {
 }
 
 const goToArticle = (articleId) => {
-  window.open(`/articles/${articleId}`, '_blank')
+  router.push(`/articles/${articleId}`)
 }
 
 onMounted(() => {

@@ -32,6 +32,9 @@ public class CommentController {
         if (comment.getContent() != null) {
             comment.setContent(HtmlUtils.sanitize(comment.getContent()));
         }
+        if (comment.getStatus() == null) {
+            comment.setStatus("PENDING");
+        }
         return Result.success(commentService.create(comment));
     }
 
