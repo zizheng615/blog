@@ -73,8 +73,14 @@
           resize="none"
         />
       </el-form-item>
+      <el-form-item label="编辑模式">
+        <el-radio-group v-model="form.editorMode">
+          <el-radio-button :value="'HTML'">富文本</el-radio-button>
+          <el-radio-button :value="'MARKDOWN'">Markdown</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item label="内容" required>
-        <div class="editor-wrapper">
+        <div v-if="form.editorMode === 'HTML'" class="editor-wrapper">
           <Toolbar
             :editor="editorRef"
             :defaultConfig="toolbarConfig"
@@ -88,6 +94,20 @@
             class="editor-body"
             @onCreated="onEditorCreated"
           />
+        </div>
+        <div v-else class="markdown-wrapper">
+          <el-input
+            v-model="form.contentMd"
+            type="textarea"
+            :rows="18"
+            placeholder="使用 Markdown 语法书写，支持 $x^2$ 和 $$\int_0^1 x dx$$ 公式..."
+            resize="none"
+            class="markdown-textarea"
+          />
+          <div class="markdown-preview-wrapper">
+            <div class="markdown-preview-label">实时预览</div>
+            <div ref="markdownPreviewRef" class="markdown-preview" v-html="markdownPreview"></div>
+          </div>
         </div>
       </el-form-item>
       <el-form-item label="状态">
@@ -110,14 +130,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, shallowRef, watch, onBeforeUnmount, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, shallowRef, watch, onBeforeUnmount, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import '@wangeditor/editor/dist/css/style.css'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { Boot } from '@wangeditor/editor'
 import formulaModule from '@wangeditor/plugin-formula'
+import MarkdownIt from 'markdown-it'
+import DOMPurify from 'dompurify'
+import 'katex/dist/katex.min.css'
+import renderMathInElement from 'katex/contrib/auto-render'
 import { createArticle, updateArticle } from '@/api/article'
 import { createTag } from '@/api/tag'
+
+const mdParser = new MarkdownIt({ html: true, linkify: true, breaks: false })
 
 const mathMenuIcon = (label) =>
   `<svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor"><text x="80" y="780" font-size="700" font-family="Cambria,Times,serif" font-style="italic">${label}</text></svg>`
@@ -374,8 +400,35 @@ const form = reactive({
   tagIds: [],
   summary: '',
   content: '',
+  contentMd: '',
+  editorMode: 'HTML',
   status: 'PUBLISHED',
   republish: false
+})
+
+const markdownPreviewRef = ref(null)
+const markdownPreview = computed(() => {
+  if (form.editorMode !== 'MARKDOWN' || !form.contentMd) return ''
+  return DOMPurify.sanitize(mdParser.render(form.contentMd))
+})
+
+watch(markdownPreview, () => {
+  if (!markdownPreviewRef.value) return
+  nextTick(() => {
+    if (!markdownPreviewRef.value) return
+    try {
+      renderMathInElement(markdownPreviewRef.value, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '\\[', right: '\\]', display: true }
+        ],
+        ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        throwOnError: false
+      })
+    } catch (e) { /* preview math best-effort */ }
+  })
 })
 
 const open = (article = null) => {
@@ -383,11 +436,14 @@ const open = (article = null) => {
   if (article) {
     Object.assign(form, article)
     form.tagIds = article.tags?.map(t => t.id) || []
+    form.contentMd = article.contentMd || ''
+    form.editorMode = article.contentMd ? 'MARKDOWN' : 'HTML'
   } else {
     Object.assign(form, {
       id: null, title: '', slug: '', categoryId: null,
       articleType: 'TECH', tagIds: [], summary: '',
-      content: '', status: 'PUBLISHED'
+      content: '', contentMd: '', editorMode: 'HTML',
+      status: 'PUBLISHED'
     })
   }
   form.republish = false
@@ -398,7 +454,9 @@ const open = (article = null) => {
 }
 
 const submit = async () => {
-  if (!form.title || !form.categoryId || !form.content) {
+  const bodyMissing =
+    form.editorMode === 'MARKDOWN' ? !form.contentMd?.trim() : !form.content
+  if (!form.title || !form.categoryId || bodyMissing) {
     ElMessage.warning('请填写必填项')
     return
   }
@@ -406,6 +464,14 @@ const submit = async () => {
   try {
     const data = { ...form }
     data.tags = form.tagIds.map(id => ({ id }))
+    if (form.editorMode === 'MARKDOWN') {
+      // Convert markdown to HTML server-side so detail view can render via v-html;
+      // keep raw md in contentMd for re-editing.
+      data.content = mdParser.render(form.contentMd || '')
+    } else {
+      data.contentMd = ''
+    }
+    delete data.editorMode
     if (isEdit.value) {
       await updateArticle(form.id, data)
     } else {
@@ -446,6 +512,81 @@ defineExpose({ open })
   border-radius: 0 0 4px 4px;
 }
 
+.markdown-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.markdown-textarea {
+  :deep(.el-textarea__inner) {
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 0.9em;
+    min-height: 420px;
+    line-height: 1.6;
+  }
+}
+
+.markdown-preview-wrapper {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #fafbfc;
+  max-height: 460px;
+  overflow: hidden;
+}
+
+.markdown-preview-label {
+  padding: 6px 12px;
+  font-size: 0.8em;
+  color: #909399;
+  border-bottom: 1px solid #ecf0f1;
+  background: white;
+}
+
+.markdown-preview {
+  padding: 12px 16px;
+  overflow-y: auto;
+  flex: 1;
+  word-break: break-word;
+
+  :deep(h1), :deep(h2), :deep(h3), :deep(h4) {
+    margin-top: 0.8em;
+    margin-bottom: 0.4em;
+    font-weight: 600;
+  }
+  :deep(p) { margin: 0.5em 0; }
+  :deep(code) {
+    background: #f0f0f0;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  :deep(pre) {
+    background: #f6f8fa;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+  :deep(pre code) {
+    background: transparent;
+    padding: 0;
+  }
+  :deep(blockquote) {
+    border-left: 4px solid #dcdfe6;
+    padding-left: 12px;
+    color: #606266;
+    margin: 0.5em 0;
+  }
+  :deep(ul), :deep(ol) {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+  }
+  :deep(img) { max-width: 100%; }
+}
+
 .tag-control {
   display: flex;
   flex-wrap: wrap;
@@ -479,6 +620,14 @@ defineExpose({ open })
   .tag-select,
   .tag-input {
     flex: 1 1 100%;
+  }
+
+  .markdown-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .markdown-preview-wrapper {
+    max-height: 280px;
   }
 }
 </style>

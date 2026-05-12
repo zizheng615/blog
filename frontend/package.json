@@ -19,6 +19,7 @@
     "element-plus": "^2.14.0",
     "emoji-picker-element": "^1.29.1",
     "katex": "^0.16.45",
+    "markdown-it": "^14.1.1",
     "nprogress": "^0.2.0",
     "pinia": "^3.0.4",
     "sass": "^1.99.0",
