@@ -2,7 +2,7 @@
   <nav class="navbar">
     <div class="nav-container">
       <router-link to="/" class="logo">
-        <el-icon><Notebook /></el-icon>
+        <el-icon class="icon-glow-purple"><Notebook /></el-icon>
         <span>我的博客</span>
       </router-link>
 
@@ -14,7 +14,7 @@
           active-class=""
           exact-active-class=""
         >
-          <el-icon><Cpu /></el-icon>技术文章
+          <el-icon class="icon-glow-blue"><Cpu /></el-icon>技术文章
         </router-link>
         <router-link
           :to="{ path: '/articles', query: { type: 'LIFE' } }"
@@ -23,15 +23,15 @@
           active-class=""
           exact-active-class=""
         >
-          <el-icon><Coffee /></el-icon>生活分享
+          <el-icon class="icon-glow-pink"><Coffee /></el-icon>生活分享
         </router-link>
         <router-link to="/contact" class="nav-link">
-          <el-icon><Message /></el-icon>联系我
+          <el-icon class="icon-glow-purple"><Message /></el-icon>联系我
         </router-link>
       </div>
 
       <button class="menu-toggle" @click="menuOpen = !menuOpen">
-        <el-icon><Menu /></el-icon>
+        <el-icon class="icon-glow-gray"><Menu /></el-icon>
       </button>
     </div>
   </nav>

@@ -10,7 +10,7 @@
         </div>
         <div class="section-header">
           <h2>最新文章</h2>
-          <router-link to="/articles" class="more">查看全部 <el-icon><ArrowRight /></el-icon></router-link>
+          <router-link to="/articles" class="more">查看全部 <el-icon class="icon-glow-purple"><ArrowRight /></el-icon></router-link>
         </div>
         <div class="article-grid">
           <ArticleCard v-for="article in articles" :key="article.id" :article="article" />

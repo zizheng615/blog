@@ -25,8 +25,8 @@
           </span>
         </div>
         <div class="stats">
-          <span><el-icon><View /></el-icon> {{ article.viewCount || 0 }}</span>
-          <span><el-icon><ChatLineRound /></el-icon> {{ article.commentCount || 0 }}</span>
+          <span><el-icon class="icon-glow-blue"><View /></el-icon> {{ article.viewCount || 0 }}</span>
+          <span><el-icon class="icon-glow-purple"><ChatLineRound /></el-icon> {{ article.commentCount || 0 }}</span>
         </div>
       </div>
     </div>
@@ -115,15 +115,41 @@ const tagStyle = (color) => ({
   border-radius: 4px;
   font-size: 0.75em;
   font-weight: 500;
+  position: relative;
+  transition: all 0.3s ease;
 
   &.tech {
     background: linear-gradient(135deg, #eef4ff 0%, #f5f8ff 100%);
     color: #7b96e6;
+
+    &::after {
+      background: linear-gradient(90deg, #8fa8f7 0%, #a893d1 100%);
+    }
   }
 
   &.life {
     background: linear-gradient(135deg, #fef0f6 0%, #fff5fa 100%);
     color: #d484b0;
+
+    &::after {
+      background: linear-gradient(90deg, #f0a8d8 0%, #e88ab5 100%);
+    }
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    border-radius: 1px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+  }
+
+  &:hover::after {
+    width: 60%;
   }
 }
 

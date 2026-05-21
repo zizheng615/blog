@@ -29,11 +29,11 @@
       <div class="toc-fixed-inner">
         <div class="toc-fixed-header">
           <span class="toc-fixed-title">
-            <el-icon><Document /></el-icon>
+            <el-icon class="icon-glow-purple"><Document /></el-icon>
             目录
           </span>
           <button class="toc-fixed-close" @click="tocVisible = false">
-            <el-icon><Close /></el-icon>
+            <el-icon class="icon-glow-gray"><Close /></el-icon>
           </button>
         </div>
         <nav ref="tocNavRef" class="toc-fixed-nav">
@@ -71,8 +71,8 @@
             </div>
             <h1 class="title">{{ article.title }}</h1>
             <div class="stats">
-              <span><el-icon><View /></el-icon> {{ article.viewCount || 0 }}</span>
-              <span><el-icon><ChatLineRound /></el-icon> {{ article.commentCount || 0 }}</span>
+              <span><el-icon class="icon-glow-blue"><View /></el-icon> {{ article.viewCount || 0 }}</span>
+              <span><el-icon class="icon-glow-purple"><ChatLineRound /></el-icon> {{ article.commentCount || 0 }}</span>
             </div>
           </div>
 
@@ -86,7 +86,7 @@
           <div class="article-footer">
             <div class="tags-header" @click="tagsExpanded = !tagsExpanded">
               <div class="tags-header-left">
-                <el-icon><PriceTag /></el-icon>
+                <el-icon class="icon-glow-pink"><PriceTag /></el-icon>
                 <span class="tags-title">标签</span>
                 <span class="tags-count" v-if="article.tags?.length">({{ article.tags.length }})</span>
               </div>
@@ -633,17 +633,43 @@ onUnmounted(() => {
   border-radius: 20px;
   font-size: 0.78em;
   font-weight: 500;
+  position: relative;
+  transition: all 0.3s ease;
 
   &.tech {
     background: linear-gradient(135deg, #eef4ff 0%, #f0f4ff 100%);
     color: #7b96e6;
     border: 1px solid rgba(123, 150, 230, 0.15);
+
+    &::after {
+      background: linear-gradient(90deg, #8fa8f7 0%, #a893d1 100%);
+    }
   }
 
   &.life {
     background: linear-gradient(135deg, #fef0f6 0%, #fff5fa 100%);
     color: #d484b0;
     border: 1px solid rgba(212, 132, 176, 0.15);
+
+    &::after {
+      background: linear-gradient(90deg, #f0a8d8 0%, #e88ab5 100%);
+    }
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    border-radius: 1px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+  }
+
+  &:hover::after {
+    width: 60%;
   }
 }
 

@@ -2,7 +2,7 @@
   <aside class="sidebar">
     <div class="sidebar-section">
       <h3 class="section-title">
-        <el-icon><Collection /></el-icon> 分类
+        <el-icon class="icon-glow-blue"><Collection /></el-icon> 分类
       </h3>
       <div class="category-list">
         <router-link
@@ -20,9 +20,9 @@
     <div class="sidebar-section">
       <div class="section-header" @click="tagsExpanded = !tagsExpanded">
         <h3 class="section-title">
-          <el-icon><PriceTag /></el-icon> 标签
+          <el-icon class="icon-glow-pink"><PriceTag /></el-icon> 标签
         </h3>
-        <el-icon class="section-toggle" :class="{ 'section-toggle-collapsed': !tagsExpanded }">
+        <el-icon class="section-toggle icon-glow-gray" :class="{ 'section-toggle-collapsed': !tagsExpanded }">
           <ArrowDown />
         </el-icon>
       </div>

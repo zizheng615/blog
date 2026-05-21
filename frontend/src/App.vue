@@ -43,4 +43,25 @@ a {
   text-decoration: none;
   color: inherit;
 }
+
+/* 图标彩色立体效果工具类 */
+.icon-glow-blue {
+  color: #8fa8f7 !important;
+  filter: drop-shadow(0 1px 2px rgba(143, 168, 247, 0.3));
+}
+
+.icon-glow-pink {
+  color: #f0a8d8 !important;
+  filter: drop-shadow(0 1px 2px rgba(240, 168, 216, 0.3));
+}
+
+.icon-glow-purple {
+  color: #a893d1 !important;
+  filter: drop-shadow(0 1px 2px rgba(168, 147, 209, 0.3));
+}
+
+.icon-glow-gray {
+  color: #b8c5d6 !important;
+  filter: drop-shadow(0 1px 2px rgba(184, 197, 214, 0.25));
+}
 </style>

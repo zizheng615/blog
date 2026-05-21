@@ -14,10 +14,10 @@
         <h4>关注我</h4>
         <div class="social-links">
           <a :href="github" target="_blank" class="social-link">
-            <el-icon><Platform /></el-icon> GitHub
+            <el-icon style="color: #8fa8f7; filter: drop-shadow(0 1px 2px rgba(143,168,247,0.3));"><Platform /></el-icon> GitHub
           </a>
           <a :href="bilibili" target="_blank" class="social-link">
-            <el-icon><VideoPlay /></el-icon> B站
+            <el-icon style="color: #f0a8d8; filter: drop-shadow(0 1px 2px rgba(240,168,216,0.3));"><VideoPlay /></el-icon> B站
           </a>
         </div>
       </div>
