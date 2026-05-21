@@ -76,7 +76,7 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .footer {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #2d3a4f 0%, #3a4a63 50%, #4a5d7a 100%);
   color: #ecf0f1;
   padding: 40px 0 20px;
 }

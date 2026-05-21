@@ -74,14 +74,14 @@ const isTypeActive = (type) => route.path === '/articles' && route.query.type ==
   gap: 8px;
   font-size: 1.3em;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #7b96e6 0%, #9a7fc2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 
   .el-icon {
     font-size: 1.2em;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #7b96e6 0%, #9a7fc2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

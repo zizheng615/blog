@@ -87,19 +87,19 @@ const tagStyle = (color) => ({
   }
 
   &[data-type='tech']::before {
-    background: linear-gradient(180deg, #667eea 0%, #409eff 100%);
+    background: linear-gradient(180deg, #8fa8f7 0%, #7bb3f0 100%);
   }
 
   &[data-type='tech']:hover {
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.14);
+    box-shadow: 0 8px 24px rgba(143, 168, 247, 0.14);
   }
 
   &[data-type='life']::before {
-    background: linear-gradient(180deg, #f093fb 0%, #eb2f96 100%);
+    background: linear-gradient(180deg, #f0a8d8 0%, #e88ab5 100%);
   }
 
   &[data-type='life']:hover {
-    box-shadow: 0 8px 24px rgba(235, 47, 150, 0.14);
+    box-shadow: 0 8px 24px rgba(240, 168, 216, 0.14);
   }
 }
 
@@ -117,13 +117,13 @@ const tagStyle = (color) => ({
   font-weight: 500;
 
   &.tech {
-    background: linear-gradient(135deg, #e6f7ff 0%, #f0f4ff 100%);
-    color: #667eea;
+    background: linear-gradient(135deg, #eef4ff 0%, #f5f8ff 100%);
+    color: #7b96e6;
   }
 
   &.life {
-    background: linear-gradient(135deg, #fff0f6 0%, #fef0ff 100%);
-    color: #eb2f96;
+    background: linear-gradient(135deg, #fef0f6 0%, #fff5fa 100%);
+    color: #d484b0;
   }
 }
 

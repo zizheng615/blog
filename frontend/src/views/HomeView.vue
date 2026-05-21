@@ -51,10 +51,10 @@ onMounted(async () => {
 }
 
 .hero-banner {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
-  padding: 40px 32px;
-  margin-bottom: 28px;
+  background: linear-gradient(135deg, #8fa8f7 0%, #a893d1 100%);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
   position: relative;
   overflow: hidden;
 
@@ -87,16 +87,16 @@ onMounted(async () => {
 }
 
 .hero-title {
-  font-size: 1.6em;
-  font-weight: 700;
+  font-size: 1.25em;
+  font-weight: 600;
   color: white;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   letter-spacing: 0.02em;
 }
 
 .hero-subtitle {
-  font-size: 0.95em;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.88em;
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 400;
 }
 
