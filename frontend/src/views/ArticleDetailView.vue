@@ -1,22 +1,43 @@
 <template>
   <div class="article-detail container page-wrapper">
-    <div class="detail-layout">
-      <!-- 目录 -->
-      <aside v-if="tocItems.length > 0" class="toc-sidebar">
-        <div class="toc-sticky">
-          <div class="toc-header">
-            <el-icon><Document /></el-icon>
-            <span>目录</span>
+    <!-- 目录悬浮按钮 -->
+    <button
+      v-if="tocItems.length > 0"
+      class="toc-float-btn"
+      :class="{ 'toc-float-btn-active': tocVisible }"
+      @click="tocVisible = !tocVisible"
+      title="目录"
+    >
+      <el-icon><Document /></el-icon>
+      <span class="toc-float-label">目录</span>
+    </button>
+
+    <!-- 目录抽屉 -->
+    <transition name="toc-drawer">
+      <aside
+        v-if="tocVisible && tocItems.length > 0"
+        class="toc-drawer"
+        @click.stop
+      >
+        <div class="toc-drawer-inner">
+          <div class="toc-drawer-header">
+            <span class="toc-drawer-title">
+              <el-icon><Document /></el-icon>
+              目录
+            </span>
+            <button class="toc-drawer-close" @click="tocVisible = false">
+              <el-icon><Close /></el-icon>
+            </button>
           </div>
-          <nav class="toc-nav">
+          <nav class="toc-drawer-nav">
             <a
               v-for="item in tocItems"
               :key="item.id"
               :href="`#${item.id}`"
-              class="toc-link"
+              class="toc-drawer-link"
               :class="{
-                'toc-active': activeTocId === item.id,
-                [`toc-level-${item.level}`]: true
+                'toc-drawer-active': activeTocId === item.id,
+                [`toc-drawer-level-${item.level}`]: true
               }"
               @click.prevent="scrollToHeading(item.id)"
             >
@@ -25,7 +46,18 @@
           </nav>
         </div>
       </aside>
+    </transition>
 
+    <!-- 遮罩层 -->
+    <transition name="toc-fade">
+      <div
+        v-if="tocVisible && tocItems.length > 0"
+        class="toc-overlay"
+        @click="tocVisible = false"
+      ></div>
+    </transition>
+
+    <div class="detail-layout">
       <div class="article-main">
         <div v-if="loading" class="loading">
           <el-skeleton :rows="10" animated />
@@ -54,17 +86,29 @@
           ></div>
 
           <div class="article-footer">
-            <div class="tags">
-              <router-link
-                v-for="tag in article.tags"
-                :key="tag.id"
-                :to="{ path: '/articles', query: { tagId: tag.id } }"
-                class="tag"
-                :style="tagStyle(tag.color)"
-              >
-                #{{ tag.name }}
-              </router-link>
+            <div class="tags-header" @click="tagsExpanded = !tagsExpanded">
+              <div class="tags-header-left">
+                <el-icon><PriceTag /></el-icon>
+                <span class="tags-title">标签</span>
+                <span class="tags-count" v-if="article.tags?.length">({{ article.tags.length }})</span>
+              </div>
+              <el-icon class="tags-toggle-icon" :class="{ 'tags-toggle-icon-rotated': !tagsExpanded }">
+                <ArrowDown />
+              </el-icon>
             </div>
+            <transition name="tags-collapse">
+              <div v-show="tagsExpanded" class="tags-body">
+                <router-link
+                  v-for="tag in article.tags"
+                  :key="tag.id"
+                  :to="{ path: '/articles', query: { tagId: tag.id } }"
+                  class="tag"
+                  :style="tagStyle(tag.color)"
+                >
+                  #{{ tag.name }}
+                </router-link>
+              </div>
+            </transition>
           </div>
 
           <CommentSection :articleId="article.id" />
@@ -98,6 +142,8 @@ const articleBodyRef = ref(null)
 const tocItems = ref([])
 const activeTocId = ref('')
 const observer = ref(null)
+const tocVisible = ref(false)
+const tagsExpanded = ref(true)
 
 const sanitizedContent = computed(() => {
   return article.value?.content ? DOMPurify.sanitize(article.value.content, {
@@ -128,6 +174,7 @@ const generateToc = () => {
 const scrollToHeading = (id) => {
   const element = document.getElementById(id)
   if (!element) return
+  tocVisible.value = false
   const offset = 80
   const top = element.getBoundingClientRect().top + window.scrollY - offset
   window.scrollTo({ top, behavior: 'smooth' })
@@ -230,7 +277,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .detail-layout {
   display: grid;
-  grid-template-columns: 220px 1fr 300px;
+  grid-template-columns: 1fr 300px;
   gap: 24px;
 }
 
@@ -238,20 +285,110 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-/* 目录 */
-.toc-sidebar {
-  display: block;
+/* 目录悬浮按钮 */
+.toc-float-btn {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: white;
+  border: 1px solid #e0e6ed;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  font-size: 0.85em;
+  color: #4a5568;
+  transition: all 0.25s ease;
+
+  &:hover {
+    color: #409eff;
+    border-color: #409eff;
+    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.15);
+  }
 }
 
-.toc-sticky {
-  position: sticky;
-  top: 80px;
+.toc-float-btn-active {
+  color: #409eff;
+  border-color: #409eff;
+  background: #ecf5ff;
+}
+
+.toc-float-label {
+  font-size: 0.85em;
+}
+
+/* 目录抽屉 */
+.toc-drawer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 200;
+  width: 280px;
+  padding: 16px;
+  pointer-events: none;
+}
+
+.toc-drawer-inner {
   background: white;
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  max-height: calc(100vh - 100px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.toc-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.toc-drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.toc-drawer-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f5f7fa;
+    color: #409eff;
+  }
+}
+
+.toc-drawer-nav {
+  flex: 1;
   overflow-y: auto;
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 
   &::-webkit-scrollbar {
     width: 4px;
@@ -263,27 +400,9 @@ onUnmounted(() => {
   }
 }
 
-.toc-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.95em;
-  font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 14px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #ecf0f1;
-}
-
-.toc-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.toc-link {
+.toc-drawer-link {
   display: block;
-  padding: 6px 10px;
+  padding: 7px 12px;
   border-radius: 6px;
   font-size: 0.85em;
   color: #4a5568;
@@ -291,6 +410,7 @@ onUnmounted(() => {
   line-height: 1.5;
   transition: all 0.2s ease;
   border-left: 2px solid transparent;
+  word-break: break-all;
 
   &:hover {
     background: #f5f7fa;
@@ -298,32 +418,63 @@ onUnmounted(() => {
   }
 }
 
-.toc-level-1 {
+.toc-drawer-level-1 {
   font-weight: 600;
   font-size: 0.88em;
 }
 
-.toc-level-2 {
-  padding-left: 18px;
+.toc-drawer-level-2 {
+  padding-left: 22px;
 }
 
-.toc-level-3 {
-  padding-left: 32px;
+.toc-drawer-level-3 {
+  padding-left: 38px;
   font-size: 0.82em;
   color: #718096;
 }
 
-.toc-level-4 {
-  padding-left: 46px;
+.toc-drawer-level-4 {
+  padding-left: 54px;
   font-size: 0.8em;
   color: #a0aec0;
 }
 
-.toc-active {
+.toc-drawer-active {
   background: #ecf5ff;
   color: #409eff;
   border-left-color: #409eff;
   font-weight: 500;
+}
+
+/* 遮罩 */
+.toc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(2px);
+}
+
+/* 过渡动画 */
+.toc-drawer-enter-active,
+.toc-drawer-leave-active {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+
+.toc-drawer-enter-from,
+.toc-drawer-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.toc-fade-enter-active,
+.toc-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.toc-fade-enter-from,
+.toc-fade-leave-to {
+  opacity: 0;
 }
 
 .loading {
@@ -403,29 +554,94 @@ onUnmounted(() => {
 
 .article-footer {
   background: white;
-  padding: 16px 32px;
+  padding: 0;
   margin-top: 1px;
-  border-radius: 0;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
 
-  .tags {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+.tags-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 32px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
 
-    .tag {
-      font-size: 0.9em;
-      padding: 4px 12px;
-      border-radius: 4px;
-      text-decoration: none;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      cursor: pointer;
+  &:hover {
+    background: #fafafa;
+  }
+}
 
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-      }
+.tags-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2c3e50;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.tags-title {
+  font-weight: 600;
+}
+
+.tags-count {
+  color: #a0aec0;
+  font-size: 0.85em;
+}
+
+.tags-toggle-icon {
+  color: #a0aec0;
+  transition: transform 0.25s ease;
+  font-size: 0.9em;
+}
+
+.tags-toggle-icon-rotated {
+  transform: rotate(-90deg);
+}
+
+.tags-body {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 0 32px 18px;
+
+  .tag {
+    font-size: 0.9em;
+    padding: 4px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
   }
+}
+
+/* 标签折叠过渡动画 */
+.tags-collapse-enter-active,
+.tags-collapse-leave-active {
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+
+.tags-collapse-enter-from,
+.tags-collapse-leave-to {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.tags-collapse-enter-to,
+.tags-collapse-leave-from {
+  opacity: 1;
+  max-height: 200px;
 }
 
 .sidebar-area {
@@ -436,11 +652,12 @@ onUnmounted(() => {
 
 @media (max-width: 1024px) {
   .detail-layout {
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: 1fr 260px;
+    gap: 16px;
   }
 
-  .toc-sidebar {
-    display: none;
+  .toc-float-btn {
+    left: 12px;
   }
 }
 
@@ -450,8 +667,10 @@ onUnmounted(() => {
   }
 
   .sidebar-area,
-  .toc-sidebar {
-    display: none;
+  .toc-float-btn,
+  .toc-drawer,
+  .toc-overlay {
+    display: none !important;
   }
 
   .title {
