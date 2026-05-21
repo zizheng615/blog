@@ -20,42 +20,42 @@
       </div>
     </div>
 
-    <div class="detail-layout" :class="{ 'has-toc': tocVisible && tocItems.length > 0 }">
-      <!-- 目录列 -->
-      <aside
-        v-if="tocItems.length > 0"
-        class="toc-sidebar"
-        :class="{ 'is-open': tocVisible }"
-      >
-        <div class="toc-sidebar-sticky">
-          <div class="toc-sidebar-header">
-            <span class="toc-sidebar-title">
-              <el-icon><Document /></el-icon>
-              目录
-            </span>
-            <button class="toc-sidebar-close" @click="tocVisible = false">
-              <el-icon><Close /></el-icon>
-            </button>
-          </div>
-          <nav ref="tocNavRef" class="toc-sidebar-nav">
-            <a
-              v-for="item in tocItems"
-              :key="item.id"
-              :ref="el => { if (el) tocLinkRefs[item.id] = el }"
-              :href="`#${item.id}`"
-              class="toc-sidebar-link"
-              :class="{
-                'toc-sidebar-active': activeTocId === item.id,
-                [`toc-sidebar-level-${item.level}`]: true
-              }"
-              @click.prevent="scrollToHeading(item.id)"
-            >
-              {{ item.text }}
-            </a>
-          </nav>
+    <!-- 固定目录 -->
+    <aside
+      v-if="tocItems.length > 0"
+      v-show="tocVisible"
+      class="toc-fixed"
+    >
+      <div class="toc-fixed-inner">
+        <div class="toc-fixed-header">
+          <span class="toc-fixed-title">
+            <el-icon><Document /></el-icon>
+            目录
+          </span>
+          <button class="toc-fixed-close" @click="tocVisible = false">
+            <el-icon><Close /></el-icon>
+          </button>
         </div>
-      </aside>
+        <nav ref="tocNavRef" class="toc-fixed-nav">
+          <a
+            v-for="item in tocItems"
+            :key="item.id"
+            :ref="el => { if (el) tocLinkRefs[item.id] = el }"
+            :href="`#${item.id}`"
+            class="toc-fixed-link"
+            :class="{
+              'toc-fixed-active': activeTocId === item.id,
+              [`toc-fixed-level-${item.level}`]: true
+            }"
+            @click.prevent="scrollToHeading(item.id)"
+          >
+            {{ item.text }}
+          </a>
+        </nav>
+      </div>
+    </aside>
 
+    <div class="detail-layout" :class="{ 'has-toc': tocVisible && tocItems.length > 0 }">
       <div class="article-main">
         <div v-if="loading" class="loading">
           <el-skeleton :rows="10" animated />
@@ -408,31 +408,28 @@ onUnmounted(() => {
 .article-main {
   flex: 1;
   min-width: 0;
+  transition: margin-left 0.3s ease;
 }
 
-/* 目录列 */
-.toc-sidebar {
-  max-width: 0;
-  opacity: 0;
-  overflow: hidden;
-  flex-shrink: 0;
-  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+.detail-layout.has-toc .article-main {
+  margin-left: 264px;
 }
 
-.toc-sidebar.is-open {
-  max-width: 260px;
-  opacity: 1;
-}
-
-.toc-sidebar-sticky {
-  width: 260px;
-  position: sticky;
+/* 固定目录 */
+.toc-fixed {
+  position: fixed;
+  left: 20px;
   top: 80px;
-  align-self: start;
+  width: 240px;
+  max-height: calc(100vh - 100px);
+  z-index: 90;
+}
+
+.toc-fixed-inner {
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   max-height: calc(100vh - 100px);
   overflow-y: auto;
 
@@ -446,7 +443,7 @@ onUnmounted(() => {
   }
 }
 
-.toc-sidebar-header {
+.toc-fixed-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -455,7 +452,7 @@ onUnmounted(() => {
   border-bottom: 1px solid #ecf0f1;
 }
 
-.toc-sidebar-title {
+.toc-fixed-title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -464,7 +461,7 @@ onUnmounted(() => {
   color: #2c3e50;
 }
 
-.toc-sidebar-close {
+.toc-fixed-close {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -483,13 +480,13 @@ onUnmounted(() => {
   }
 }
 
-.toc-sidebar-nav {
+.toc-fixed-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.toc-sidebar-link {
+.toc-fixed-link {
   display: block;
   padding: 6px 10px;
   border-radius: 6px;
@@ -507,28 +504,28 @@ onUnmounted(() => {
   }
 }
 
-.toc-sidebar-level-1 {
+.toc-fixed-level-1 {
   font-weight: 600;
   font-size: 0.88em;
 }
 
-.toc-sidebar-level-2 {
+.toc-fixed-level-2 {
   padding-left: 18px;
 }
 
-.toc-sidebar-level-3 {
+.toc-fixed-level-3 {
   padding-left: 32px;
   font-size: 0.82em;
   color: #718096;
 }
 
-.toc-sidebar-level-4 {
+.toc-fixed-level-4 {
   padding-left: 46px;
   font-size: 0.8em;
   color: #a0aec0;
 }
 
-.toc-sidebar-active {
+.toc-fixed-active {
   background: #ecf5ff;
   color: #409eff;
   border-left-color: #409eff;
@@ -776,8 +773,16 @@ onUnmounted(() => {
     gap: 16px;
   }
 
+  .detail-layout.has-toc .article-main {
+    margin-left: 0;
+  }
+
   .sidebar-area {
     width: 260px;
+  }
+
+  .toc-fixed {
+    display: none;
   }
 
   .toc-float-btn {
@@ -791,8 +796,7 @@ onUnmounted(() => {
   }
 
   .sidebar-area,
-  .toc-float-btn,
-  .toc-sidebar {
+  .toc-float-btn {
     display: none !important;
   }
 
