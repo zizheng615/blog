@@ -1,16 +1,24 @@
 <template>
   <div class="article-detail container page-wrapper">
     <!-- 目录悬浮按钮 -->
-    <button
+    <div
       v-if="tocItems.length > 0"
+      ref="tocBtnRef"
       class="toc-float-btn"
-      :class="{ 'toc-float-btn-active': tocVisible }"
-      @click="tocVisible = !tocVisible"
+      :class="{
+        'toc-float-btn-active': tocVisible,
+        'toc-float-btn-dragging': isDragging
+      }"
+      :style="btnStyle"
+      @click="onBtnClick"
+      @mousedown="onDragStart"
+      @touchstart="onDragStart"
       title="目录"
     >
-      <el-icon><Document /></el-icon>
-      <span class="toc-float-label">目录</span>
-    </button>
+      <div class="toc-float-ring">
+        <el-icon><Document /></el-icon>
+      </div>
+    </div>
 
     <!-- 目录抽屉 -->
     <transition name="toc-drawer">
@@ -144,6 +152,108 @@ const activeTocId = ref('')
 const observer = ref(null)
 const tocVisible = ref(false)
 const tagsExpanded = ref(true)
+
+// 拖拽相关
+const tocBtnRef = ref(null)
+const isDragging = ref(false)
+const hasDragged = ref(false)
+const btnPos = ref({ x: 0, y: 0 })
+const dragOffset = ref({ x: 0, y: 0 })
+
+const TOC_POS_KEY = 'toc-btn-position'
+
+const loadSavedPosition = () => {
+  try {
+    const saved = localStorage.getItem(TOC_POS_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      btnPos.value = { x: parsed.x || 0, y: parsed.y || 0 }
+      return
+    }
+  } catch (e) { /* ignore */ }
+  // 默认位置：左侧居中偏上一点
+  btnPos.value = { x: 0, y: -120 }
+}
+
+const savePosition = () => {
+  try {
+    localStorage.setItem(TOC_POS_KEY, JSON.stringify(btnPos.value))
+  } catch (e) { /* ignore */ }
+}
+
+const btnStyle = computed(() => ({
+  transform: `translate3d(${btnPos.value.x}px, ${btnPos.value.y}px, 0)`
+}))
+
+const onDragStart = (e) => {
+  if (!tocBtnRef.value) return
+  isDragging.value = true
+  hasDragged.value = false
+
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+
+  const rect = tocBtnRef.value.getBoundingClientRect()
+  dragOffset.value = {
+    x: clientX - rect.left,
+    y: clientY - rect.top
+  }
+
+  document.addEventListener('mousemove', onDragMove)
+  document.addEventListener('mouseup', onDragEnd)
+  document.addEventListener('touchmove', onDragMove, { passive: false })
+  document.addEventListener('touchend', onDragEnd)
+}
+
+const onDragMove = (e) => {
+  if (!isDragging.value) return
+  e.preventDefault()
+
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY
+
+  const btnSize = 48
+  const margin = 16
+
+  let newX = clientX - dragOffset.value.x - margin
+  let newY = clientY - dragOffset.value.y - margin
+
+  // 限制在视口内
+  const maxX = window.innerWidth - btnSize - margin * 2
+  const maxY = window.innerHeight - btnSize - margin * 2
+
+  newX = Math.max(0, Math.min(newX, maxX))
+  newY = Math.max(0, Math.min(newY, maxY))
+
+  // 相对于默认位置（左侧 margin 处）的偏移
+  const defaultX = margin
+  const defaultY = window.innerHeight / 2
+
+  btnPos.value = {
+    x: newX - defaultX,
+    y: newY - defaultY
+  }
+
+  hasDragged.value = true
+}
+
+const onDragEnd = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDragMove)
+  document.removeEventListener('mouseup', onDragEnd)
+  document.removeEventListener('touchmove', onDragMove)
+  document.removeEventListener('touchend', onDragEnd)
+  savePosition()
+}
+
+const onBtnClick = () => {
+  if (hasDragged.value) return
+  tocVisible.value = !tocVisible.value
+}
+
+onMounted(() => {
+  loadSavedPosition()
+})
 
 const sanitizedContent = computed(() => {
   return article.value?.content ? DOMPurify.sanitize(article.value.content, {
@@ -288,38 +398,65 @@ onUnmounted(() => {
 /* 目录悬浮按钮 */
 .toc-float-btn {
   position: fixed;
-  left: 20px;
+  left: 16px;
   top: 50%;
-  transform: translateY(-50%);
   z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  background: white;
-  border: 1px solid #e0e6ed;
-  border-radius: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-  font-size: 0.85em;
-  color: #4a5568;
-  transition: all 0.25s ease;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 
-  &:hover {
-    color: #409eff;
-    border-color: #409eff;
-    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.15);
+  &:active {
+    cursor: grabbing;
   }
 }
 
-.toc-float-btn-active {
-  color: #409eff;
-  border-color: #409eff;
-  background: #ecf5ff;
+.toc-float-ring {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+  color: #4a5568;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid rgba(224, 230, 237, 0.8);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    color: #409eff;
+    border-color: rgba(64, 158, 255, 0.35);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.08),
+      0 8px 20px rgba(64, 158, 255, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: scale(1.08);
+  }
 }
 
-.toc-float-label {
-  font-size: 0.85em;
+.toc-float-btn-active .toc-float-ring {
+  color: #409eff;
+  background: rgba(236, 245, 255, 0.9);
+  border-color: rgba(64, 158, 255, 0.4);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    0 6px 16px rgba(64, 158, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.toc-float-btn-dragging .toc-float-ring {
+  transform: scale(1.12);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 12px 28px rgba(64, 158, 255, 0.15);
+  border-color: rgba(64, 158, 255, 0.5);
+  cursor: grabbing;
 }
 
 /* 目录抽屉 */
@@ -446,13 +583,11 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-/* 遮罩 */
+/* 遮罩 — 仅用于捕获点击关闭，不添加任何视觉遮挡或模糊 */
 .toc-overlay {
   position: fixed;
   inset: 0;
   z-index: 150;
-  background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(2px);
 }
 
 /* 过渡动画 */
