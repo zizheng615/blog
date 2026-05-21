@@ -2,7 +2,7 @@
   <div class="article-detail container page-wrapper">
     <!-- 目录悬浮按钮 -->
     <div
-      v-if="tocItems.length > 0"
+      v-if="tocItems.length > 0 && !tocVisible"
       ref="tocBtnRef"
       class="toc-float-btn"
       :class="{
@@ -140,7 +140,7 @@ const articleBodyRef = ref(null)
 const tocItems = ref([])
 const activeTocId = ref('')
 const observer = ref(null)
-const tocVisible = ref(false)
+const tocVisible = ref(true)
 const tagsExpanded = ref(true)
 
 // 目录滚动相关
