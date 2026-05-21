@@ -2,6 +2,12 @@
   <div class="home container page-wrapper">
     <div class="home-layout">
       <div class="main-area">
+        <div class="hero-banner">
+          <div class="hero-content">
+            <h1 class="hero-title">探索技术与生活</h1>
+            <p class="hero-subtitle">记录学习的轨迹，分享生活的点滴</p>
+          </div>
+        </div>
         <div class="section-header">
           <h2>最新文章</h2>
           <router-link to="/articles" class="more">查看全部 <el-icon><ArrowRight /></el-icon></router-link>
@@ -42,6 +48,56 @@ onMounted(async () => {
 
 .main-area {
   min-width: 0;
+}
+
+.hero-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 40px 32px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-title {
+  font-size: 1.6em;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+.hero-subtitle {
+  font-size: 0.95em;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
 }
 
 .section-header {

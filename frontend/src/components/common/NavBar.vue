@@ -73,11 +73,18 @@ const isTypeActive = (type) => route.path === '/articles' && route.query.type ==
   align-items: center;
   gap: 8px;
   font-size: 1.3em;
-  font-weight: 600;
-  color: #409eff;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 
   .el-icon {
     font-size: 1.2em;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 

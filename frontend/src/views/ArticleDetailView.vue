@@ -20,32 +20,32 @@
       </div>
     </div>
 
-    <!-- 目录抽屉 -->
-    <transition name="toc-drawer">
+    <div class="detail-layout" :class="{ 'has-toc': tocVisible && tocItems.length > 0 }">
+      <!-- 目录列 -->
       <aside
-        v-if="tocVisible && tocItems.length > 0"
-        class="toc-drawer"
-        @click.stop
+        v-if="tocItems.length > 0"
+        class="toc-sidebar"
+        :class="{ 'is-open': tocVisible }"
       >
-        <div class="toc-drawer-inner">
-          <div class="toc-drawer-header">
-            <span class="toc-drawer-title">
+        <div class="toc-sidebar-sticky">
+          <div class="toc-sidebar-header">
+            <span class="toc-sidebar-title">
               <el-icon><Document /></el-icon>
               目录
             </span>
-            <button class="toc-drawer-close" @click="tocVisible = false">
+            <button class="toc-sidebar-close" @click="tocVisible = false">
               <el-icon><Close /></el-icon>
             </button>
           </div>
-          <nav class="toc-drawer-nav">
+          <nav class="toc-sidebar-nav">
             <a
               v-for="item in tocItems"
               :key="item.id"
               :href="`#${item.id}`"
-              class="toc-drawer-link"
+              class="toc-sidebar-link"
               :class="{
-                'toc-drawer-active': activeTocId === item.id,
-                [`toc-drawer-level-${item.level}`]: true
+                'toc-sidebar-active': activeTocId === item.id,
+                [`toc-sidebar-level-${item.level}`]: true
               }"
               @click.prevent="scrollToHeading(item.id)"
             >
@@ -54,18 +54,7 @@
           </nav>
         </div>
       </aside>
-    </transition>
 
-    <!-- 遮罩层 -->
-    <transition name="toc-fade">
-      <div
-        v-if="tocVisible && tocItems.length > 0"
-        class="toc-overlay"
-        @click="tocVisible = false"
-      ></div>
-    </transition>
-
-    <div class="detail-layout">
       <div class="article-main">
         <div v-if="loading" class="loading">
           <el-skeleton :rows="10" animated />
@@ -284,7 +273,6 @@ const generateToc = () => {
 const scrollToHeading = (id) => {
   const element = document.getElementById(id)
   if (!element) return
-  tocVisible.value = false
   const offset = 80
   const top = element.getBoundingClientRect().top + window.scrollY - offset
   window.scrollTo({ top, behavior: 'smooth' })
@@ -386,13 +374,138 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .detail-layout {
-  display: grid;
-  grid-template-columns: 1fr 300px;
+  display: flex;
   gap: 24px;
 }
 
 .article-main {
+  flex: 1;
   min-width: 0;
+}
+
+/* 目录列 */
+.toc-sidebar {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: max-width 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+
+.toc-sidebar.is-open {
+  max-width: 260px;
+  opacity: 1;
+}
+
+.toc-sidebar-sticky {
+  width: 260px;
+  position: sticky;
+  top: 80px;
+  align-self: start;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #e0e6ed;
+    border-radius: 2px;
+  }
+}
+
+.toc-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.toc-sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.toc-sidebar-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f5f7fa;
+    color: #409eff;
+  }
+}
+
+.toc-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toc-sidebar-link {
+  display: block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  color: #4a5568;
+  text-decoration: none;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+  border-left: 2px solid transparent;
+  word-break: break-all;
+
+  &:hover {
+    background: #f5f7fa;
+    color: #409eff;
+  }
+}
+
+.toc-sidebar-level-1 {
+  font-weight: 600;
+  font-size: 0.88em;
+}
+
+.toc-sidebar-level-2 {
+  padding-left: 18px;
+}
+
+.toc-sidebar-level-3 {
+  padding-left: 32px;
+  font-size: 0.82em;
+  color: #718096;
+}
+
+.toc-sidebar-level-4 {
+  padding-left: 46px;
+  font-size: 0.8em;
+  color: #a0aec0;
+}
+
+.toc-sidebar-active {
+  background: #ecf5ff;
+  color: #409eff;
+  border-left-color: #409eff;
+  font-weight: 500;
 }
 
 /* 目录悬浮按钮 */
@@ -457,159 +570,6 @@ onUnmounted(() => {
     0 12px 28px rgba(64, 158, 255, 0.15);
   border-color: rgba(64, 158, 255, 0.5);
   cursor: grabbing;
-}
-
-/* 目录抽屉 */
-.toc-drawer {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 200;
-  width: 280px;
-  padding: 16px;
-  pointer-events: none;
-}
-
-.toc-drawer-inner {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  pointer-events: auto;
-  overflow: hidden;
-}
-
-.toc-drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  flex-shrink: 0;
-}
-
-.toc-drawer-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.95em;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.toc-drawer-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
-  color: #a0aec0;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #f5f7fa;
-    color: #409eff;
-  }
-}
-
-.toc-drawer-nav {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #e0e6ed;
-    border-radius: 2px;
-  }
-}
-
-.toc-drawer-link {
-  display: block;
-  padding: 7px 12px;
-  border-radius: 6px;
-  font-size: 0.85em;
-  color: #4a5568;
-  text-decoration: none;
-  line-height: 1.5;
-  transition: all 0.2s ease;
-  border-left: 2px solid transparent;
-  word-break: break-all;
-
-  &:hover {
-    background: #f5f7fa;
-    color: #409eff;
-  }
-}
-
-.toc-drawer-level-1 {
-  font-weight: 600;
-  font-size: 0.88em;
-}
-
-.toc-drawer-level-2 {
-  padding-left: 22px;
-}
-
-.toc-drawer-level-3 {
-  padding-left: 38px;
-  font-size: 0.82em;
-  color: #718096;
-}
-
-.toc-drawer-level-4 {
-  padding-left: 54px;
-  font-size: 0.8em;
-  color: #a0aec0;
-}
-
-.toc-drawer-active {
-  background: #ecf5ff;
-  color: #409eff;
-  border-left-color: #409eff;
-  font-weight: 500;
-}
-
-/* 遮罩 — 仅用于捕获点击关闭，不添加任何视觉遮挡或模糊 */
-.toc-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 150;
-}
-
-/* 过渡动画 */
-.toc-drawer-enter-active,
-.toc-drawer-leave-active {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
-}
-
-.toc-drawer-enter-from,
-.toc-drawer-leave-to {
-  transform: translateX(-100%);
-  opacity: 0;
-}
-
-.toc-fade-enter-active,
-.toc-fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-
-.toc-fade-enter-from,
-.toc-fade-leave-to {
-  opacity: 0;
 }
 
 .loading {
@@ -780,15 +740,17 @@ onUnmounted(() => {
 }
 
 .sidebar-area {
-  position: sticky;
-  top: 80px;
-  align-self: start;
+  width: 300px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 1024px) {
   .detail-layout {
-    grid-template-columns: 1fr 260px;
     gap: 16px;
+  }
+
+  .sidebar-area {
+    width: 260px;
   }
 
   .toc-float-btn {
@@ -798,13 +760,12 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .detail-layout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 
   .sidebar-area,
   .toc-float-btn,
-  .toc-drawer,
-  .toc-overlay {
+  .toc-sidebar {
     display: none !important;
   }
 

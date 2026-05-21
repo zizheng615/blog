@@ -18,7 +18,8 @@ import FooterBar from './components/common/FooterBar.vue'
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f7fa;
+  background: linear-gradient(135deg, #f0f4f8 0%, #f5f0ff 50%, #f8f4f0 100%);
+  background-attachment: fixed;
 }
 
 .main-content {

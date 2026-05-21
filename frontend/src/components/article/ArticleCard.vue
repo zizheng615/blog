@@ -1,5 +1,9 @@
 <template>
-  <router-link :to="`/articles/${article.id}`" class="article-card">
+  <router-link
+    :to="`/articles/${article.id}`"
+    class="article-card"
+    :data-type="article.articleType?.toLowerCase()"
+  >
     <div class="card-content">
       <div class="meta">
         <span class="type-badge" :class="article.articleType?.toLowerCase()">
@@ -50,17 +54,52 @@ const tagStyle = (color) => ({
 <style lang="scss" scoped>
 .article-card {
   display: block;
+  position: relative;
   background: white;
   border-radius: 12px;
-  padding: 24px;
+  padding: 24px 24px 24px 28px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid transparent;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 16px;
+    bottom: 16px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     border-color: #e0e6ed;
+
+    &::before {
+      top: 12px;
+      bottom: 12px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+    }
+  }
+
+  &[data-type='tech']::before {
+    background: linear-gradient(180deg, #667eea 0%, #409eff 100%);
+  }
+
+  &[data-type='tech']:hover {
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.14);
+  }
+
+  &[data-type='life']::before {
+    background: linear-gradient(180deg, #f093fb 0%, #eb2f96 100%);
+  }
+
+  &[data-type='life']:hover {
+    box-shadow: 0 8px 24px rgba(235, 47, 150, 0.14);
   }
 }
 
@@ -78,12 +117,12 @@ const tagStyle = (color) => ({
   font-weight: 500;
 
   &.tech {
-    background: #e6f7ff;
-    color: #1890ff;
+    background: linear-gradient(135deg, #e6f7ff 0%, #f0f4ff 100%);
+    color: #667eea;
   }
 
   &.life {
-    background: #fff0f6;
+    background: linear-gradient(135deg, #fff0f6 0%, #fef0ff 100%);
     color: #eb2f96;
   }
 }
