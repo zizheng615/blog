@@ -1,6 +1,31 @@
 <template>
   <div class="article-detail container page-wrapper">
     <div class="detail-layout">
+      <!-- 目录 -->
+      <aside v-if="tocItems.length > 0" class="toc-sidebar">
+        <div class="toc-sticky">
+          <div class="toc-header">
+            <el-icon><Document /></el-icon>
+            <span>目录</span>
+          </div>
+          <nav class="toc-nav">
+            <a
+              v-for="item in tocItems"
+              :key="item.id"
+              :href="`#${item.id}`"
+              class="toc-link"
+              :class="{
+                'toc-active': activeTocId === item.id,
+                [`toc-level-${item.level}`]: true
+              }"
+              @click.prevent="scrollToHeading(item.id)"
+            >
+              {{ item.text }}
+            </a>
+          </nav>
+        </div>
+      </aside>
+
       <div class="article-main">
         <div v-if="loading" class="loading">
           <el-skeleton :rows="10" animated />
@@ -51,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import dayjs from 'dayjs'
 import DOMPurify from 'dompurify'
@@ -70,6 +95,9 @@ const route = useRoute()
 const article = ref(null)
 const loading = ref(true)
 const articleBodyRef = ref(null)
+const tocItems = ref([])
+const activeTocId = ref('')
+const observer = ref(null)
 
 const sanitizedContent = computed(() => {
   return article.value?.content ? DOMPurify.sanitize(article.value.content, {
@@ -77,6 +105,81 @@ const sanitizedContent = computed(() => {
     ADD_ATTR: ['data-w-e-type', 'data-w-e-is-void', 'data-w-e-is-inline', 'data-value', 'src', 'controls', 'autoplay', 'loop', 'muted', 'poster', 'width', 'height', 'type', 'frameborder', 'allowfullscreen', 'allow', 'style', 'preload', 'playsinline']
   }) : ''
 })
+
+const generateToc = () => {
+  if (!articleBodyRef.value) return
+  const headings = articleBodyRef.value.querySelectorAll('h1, h2, h3, h4')
+  const items = []
+  headings.forEach((heading, index) => {
+    let id = heading.id
+    if (!id) {
+      id = `heading-${index}`
+      heading.id = id
+    }
+    items.push({
+      id,
+      text: heading.textContent.trim(),
+      level: parseInt(heading.tagName[1])
+    })
+  })
+  tocItems.value = items
+}
+
+const scrollToHeading = (id) => {
+  const element = document.getElementById(id)
+  if (!element) return
+  const offset = 80
+  const top = element.getBoundingClientRect().top + window.scrollY - offset
+  window.scrollTo({ top, behavior: 'smooth' })
+}
+
+const setupScrollObserver = () => {
+  if (observer.value) observer.value.disconnect()
+  if (tocItems.value.length === 0) return
+
+  const options = {
+    root: null,
+    rootMargin: '-80px 0px -60% 0px',
+    threshold: 0
+  }
+
+  observer.value = new IntersectionObserver((entries) => {
+    const visible = entries.filter(e => e.isIntersecting)
+    if (visible.length > 0) {
+      activeTocId.value = visible[0].target.id
+    }
+  }, options)
+
+  tocItems.value.forEach(item => {
+    const el = document.getElementById(item.id)
+    if (el) observer.value.observe(el)
+  })
+}
+
+watch(sanitizedContent, () => {
+  if (!articleBodyRef.value) return
+  renderFormulaSpans(articleBodyRef.value)
+  articleBodyRef.value.querySelectorAll('pre code').forEach((block) => {
+    try { hljs.highlightElement(block) } catch (e) { /* best-effort */ }
+  })
+  renderMathInElement(articleBodyRef.value, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '$', right: '$', display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
+    ],
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+    ignoredClasses: ['katex'],
+    throwOnError: false
+  })
+
+  // 生成目录并设置滚动监听
+  generateToc()
+  requestAnimationFrame(() => {
+    setupScrollObserver()
+  })
+}, { flush: 'post' })
 
 const renderFormulaSpans = (container) => {
   const spans = container.querySelectorAll('[data-w-e-type="formula"]')
@@ -94,26 +197,6 @@ const renderFormulaSpans = (container) => {
     }
   })
 }
-
-watch(sanitizedContent, () => {
-  if (!articleBodyRef.value) return
-  renderFormulaSpans(articleBodyRef.value)
-  // Syntax-highlight code blocks
-  articleBodyRef.value.querySelectorAll('pre code').forEach((block) => {
-    try { hljs.highlightElement(block) } catch (e) { /* best-effort */ }
-  })
-  renderMathInElement(articleBodyRef.value, {
-    delimiters: [
-      { left: '$$', right: '$$', display: true },
-      { left: '$', right: '$', display: false },
-      { left: '\\(', right: '\\)', display: false },
-      { left: '\\[', right: '\\]', display: true }
-    ],
-    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-    ignoredClasses: ['katex'],
-    throwOnError: false
-  })
-}, { flush: 'post' })
 
 const tagStyle = (color) => ({
   color: readableColor(color),
@@ -138,17 +221,109 @@ const formatDate = (date) => {
 }
 
 onMounted(loadArticle)
+
+onUnmounted(() => {
+  if (observer.value) observer.value.disconnect()
+})
 </script>
 
 <style lang="scss" scoped>
 .detail-layout {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 220px 1fr 300px;
   gap: 24px;
 }
 
 .article-main {
   min-width: 0;
+}
+
+/* 目录 */
+.toc-sidebar {
+  display: block;
+}
+
+.toc-sticky {
+  position: sticky;
+  top: 80px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #e0e6ed;
+    border-radius: 2px;
+  }
+}
+
+.toc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toc-link {
+  display: block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  color: #4a5568;
+  text-decoration: none;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+  border-left: 2px solid transparent;
+
+  &:hover {
+    background: #f5f7fa;
+    color: #409eff;
+  }
+}
+
+.toc-level-1 {
+  font-weight: 600;
+  font-size: 0.88em;
+}
+
+.toc-level-2 {
+  padding-left: 18px;
+}
+
+.toc-level-3 {
+  padding-left: 32px;
+  font-size: 0.82em;
+  color: #718096;
+}
+
+.toc-level-4 {
+  padding-left: 46px;
+  font-size: 0.8em;
+  color: #a0aec0;
+}
+
+.toc-active {
+  background: #ecf5ff;
+  color: #409eff;
+  border-left-color: #409eff;
+  font-weight: 500;
 }
 
 .loading {
@@ -259,12 +434,23 @@ onMounted(loadArticle)
   align-self: start;
 }
 
+@media (max-width: 1024px) {
+  .detail-layout {
+    grid-template-columns: 1fr 300px;
+  }
+
+  .toc-sidebar {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .detail-layout {
     grid-template-columns: 1fr;
   }
 
-  .sidebar-area {
+  .sidebar-area,
+  .toc-sidebar {
     display: none;
   }
 
