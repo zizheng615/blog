@@ -52,9 +52,10 @@ const isTypeActive = (type) => route.path === '/articles' && route.query.type ==
   left: 0;
   right: 0;
   height: 60px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid #e0e6ed;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border-bottom: 1px solid rgba(224, 230, 237, 0.5);
   z-index: 1000;
 }
 
@@ -101,11 +102,39 @@ const isTypeActive = (type) => route.path === '/articles' && route.query.type ==
   border-radius: 8px;
   font-size: 0.95em;
   color: #606266;
-  transition: all 0.3s;
+  position: relative;
+  transition: color 0.3s ease;
 
-  &:hover, &.router-link-active, &.is-active {
-    background: #ecf5ff;
-    color: #409eff;
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    border-radius: 1px;
+    background: linear-gradient(90deg, #8fa8f7 0%, #a893d1 100%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+  }
+
+  &:hover {
+    color: #7b96e6;
+  }
+
+  &:hover::after {
+    width: calc(100% - 32px);
+  }
+
+  &.router-link-active,
+  &.is-active {
+    color: #7b96e6;
+    font-weight: 500;
+  }
+
+  &.router-link-active::after,
+  &.is-active::after {
+    width: calc(100% - 32px);
   }
 }
 
@@ -125,9 +154,10 @@ const isTypeActive = (type) => route.path === '/articles' && route.query.type ==
     left: 0;
     right: 0;
     flex-direction: column;
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
     padding: 16px;
-    border-bottom: 1px solid #e0e6ed;
+    border-bottom: 1px solid rgba(224, 230, 237, 0.5);
     transform: translateY(-100%);
     opacity: 0;
     pointer-events: none;

@@ -115,12 +115,29 @@ onMounted(async () => {
   .more {
     display: flex;
     align-items: center;
-    gap: 4px;
-    color: #409eff;
-    font-size: 0.9em;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.88em;
+    font-weight: 500;
+    color: #7b96e6;
+    background: rgba(123, 150, 230, 0.08);
+    border: 1px solid rgba(123, 150, 230, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    .el-icon {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.9em;
+    }
 
     &:hover {
-      text-decoration: underline;
+      background: rgba(123, 150, 230, 0.14);
+      border-color: rgba(123, 150, 230, 0.35);
+      color: #6a85d6;
+
+      .el-icon {
+        transform: translateX(3px);
+      }
     }
   }
 }
