@@ -607,6 +607,18 @@ onUnmounted(() => {
   border-radius: 12px 12px 0 0;
   padding: 32px;
   border-bottom: 1px solid #e0e6ed;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #8fa8f7 0%, #a893d1 100%);
+  }
 }
 
 .meta {
@@ -617,25 +629,31 @@ onUnmounted(() => {
 }
 
 .type-badge {
-  padding: 2px 12px;
-  border-radius: 4px;
-  font-size: 0.8em;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.78em;
   font-weight: 500;
 
   &.tech {
-    background: #e6f7ff;
-    color: #1890ff;
+    background: linear-gradient(135deg, #eef4ff 0%, #f0f4ff 100%);
+    color: #7b96e6;
+    border: 1px solid rgba(123, 150, 230, 0.15);
   }
 
   &.life {
-    background: #fff0f6;
-    color: #eb2f96;
+    background: linear-gradient(135deg, #fef0f6 0%, #fff5fa 100%);
+    color: #d484b0;
+    border: 1px solid rgba(212, 132, 176, 0.15);
   }
 }
 
 .category {
-  color: #409eff;
   font-size: 0.9em;
+  font-weight: 500;
+  background: linear-gradient(135deg, #7b96e6 0%, #9a7fc2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .date {
@@ -649,6 +667,7 @@ onUnmounted(() => {
   color: #1a202c;
   line-height: 1.4;
   margin-bottom: 12px;
+  letter-spacing: -0.01em;
 }
 
 .stats {
@@ -661,6 +680,15 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 4px;
+
+    .el-icon {
+      color: #b8c5d6;
+      transition: color 0.3s ease;
+    }
+
+    &:hover .el-icon {
+      color: #8fa8f7;
+    }
   }
 }
 
