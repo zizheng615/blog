@@ -18,21 +18,28 @@
     </div>
 
     <div class="sidebar-section">
-      <h3 class="section-title">
-        <el-icon><PriceTag /></el-icon> 标签
-      </h3>
-      <div class="tag-cloud">
-        <router-link
-          v-for="tag in visibleTags"
-          :key="tag.id"
-          :to="`/articles?tagId=${tag.id}`"
-          class="tag-item"
-          :style="tagStyle(tag.color)"
-        >
-          {{ tag.name }}
-          <span class="tag-count">{{ tag.articleCount || 0 }}</span>
-        </router-link>
+      <div class="section-header" @click="tagsExpanded = !tagsExpanded">
+        <h3 class="section-title">
+          <el-icon><PriceTag /></el-icon> 标签
+        </h3>
+        <el-icon class="section-toggle" :class="{ 'section-toggle-collapsed': !tagsExpanded }">
+          <ArrowDown />
+        </el-icon>
       </div>
+      <transition name="tag-fold">
+        <div v-show="tagsExpanded" class="tag-cloud">
+          <router-link
+            v-for="tag in visibleTags"
+            :key="tag.id"
+            :to="`/articles?tagId=${tag.id}`"
+            class="tag-item"
+            :style="tagStyle(tag.color)"
+          >
+            {{ tag.name }}
+            <span class="tag-count">{{ tag.articleCount || 0 }}</span>
+          </router-link>
+        </div>
+      </transition>
     </div>
   </aside>
 </template>
@@ -45,6 +52,7 @@ import { readableColor, rgbaBg, rgbaBorder } from '@/utils/color'
 
 const categories = ref([])
 const tags = ref([])
+const tagsExpanded = ref(true)
 
 const visibleCategories = computed(() =>
   categories.value.filter(c => (c.articleCount || 0) > 0)
@@ -78,10 +86,26 @@ onMounted(async () => {
 }
 
 .sidebar-section {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 
   &:last-child {
     margin-bottom: 0;
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #f8f9fa;
   }
 }
 
@@ -89,12 +113,23 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1em;
+  font-size: 0.95em;
   font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #ecf0f1;
+  color: #1a1a2e;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+  letter-spacing: 0.02em;
+}
+
+.section-toggle {
+  color: #a0aec0;
+  font-size: 0.8em;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section-toggle-collapsed {
+  transform: rotate(-90deg);
 }
 
 .category-list {
@@ -130,6 +165,7 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 12px;
 }
 
 .tag-item {
@@ -151,5 +187,28 @@ onMounted(async () => {
 .tag-count {
   font-size: 0.8em;
   opacity: 0.7;
+}
+
+/* 标签折叠动画 */
+.tag-fold-enter-active,
+.tag-fold-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.tag-fold-enter-from,
+.tag-fold-leave-to {
+  opacity: 0;
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+}
+
+.tag-fold-enter-to,
+.tag-fold-leave-from {
+  opacity: 1;
+  max-height: 500px;
+  margin-top: 12px;
 }
 </style>
