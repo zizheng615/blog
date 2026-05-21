@@ -37,10 +37,11 @@
               <el-icon><Close /></el-icon>
             </button>
           </div>
-          <nav class="toc-sidebar-nav">
+          <nav ref="tocNavRef" class="toc-sidebar-nav">
             <a
               v-for="item in tocItems"
               :key="item.id"
+              :ref="el => { if (el) tocLinkRefs[item.id] = el }"
               :href="`#${item.id}`"
               class="toc-sidebar-link"
               :class="{
@@ -141,6 +142,10 @@ const activeTocId = ref('')
 const observer = ref(null)
 const tocVisible = ref(false)
 const tagsExpanded = ref(true)
+
+// 目录滚动相关
+const tocNavRef = ref(null)
+const tocLinkRefs = ref({})
 
 // 拖拽相关
 const tocBtnRef = ref(null)
@@ -300,6 +305,28 @@ const setupScrollObserver = () => {
     if (el) observer.value.observe(el)
   })
 }
+
+watch(activeTocId, (newId) => {
+  if (!newId || !tocNavRef.value) return
+  const linkEl = tocLinkRefs.value[newId]
+  if (!linkEl) return
+
+  const navRect = tocNavRef.value.getBoundingClientRect()
+  const linkRect = linkEl.getBoundingClientRect()
+
+  const navTop = navRect.top
+  const navBottom = navRect.bottom
+  const linkTop = linkRect.top
+  const linkBottom = linkRect.bottom
+
+  const padding = 8
+
+  if (linkTop < navTop + padding) {
+    tocNavRef.value.scrollTop -= (navTop + padding - linkTop)
+  } else if (linkBottom > navBottom - padding) {
+    tocNavRef.value.scrollTop += (linkBottom - navBottom + padding)
+  }
+})
 
 watch(sanitizedContent, () => {
   if (!articleBodyRef.value) return
