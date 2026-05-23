@@ -20,41 +20,6 @@
       </div>
     </div>
 
-    <!-- 固定目录 -->
-    <aside
-      v-if="tocItems.length > 0"
-      v-show="tocVisible"
-      class="toc-fixed"
-    >
-      <div class="toc-fixed-inner">
-        <div class="toc-fixed-header">
-          <span class="toc-fixed-title">
-            <el-icon class="icon-glow-purple"><Document /></el-icon>
-            目录
-          </span>
-          <button class="toc-fixed-close" @click="tocVisible = false">
-            <el-icon class="icon-glow-gray"><Close /></el-icon>
-          </button>
-        </div>
-        <nav ref="tocNavRef" class="toc-fixed-nav">
-          <a
-            v-for="item in tocItems"
-            :key="item.id"
-            :ref="el => { if (el) tocLinkRefs[item.id] = el }"
-            :href="`#${item.id}`"
-            class="toc-fixed-link"
-            :class="{
-              'toc-fixed-active': activeTocId === item.id,
-              [`toc-fixed-level-${item.level}`]: true
-            }"
-            @click.prevent="scrollToHeading(item.id)"
-          >
-            {{ item.text }}
-          </a>
-        </nav>
-      </div>
-    </aside>
-
     <div class="detail-layout" :class="{ 'has-toc': tocVisible && tocItems.length > 0 }">
       <aside
         v-if="tocItems.length > 0"
@@ -143,10 +108,14 @@
             </transition>
           </div>
 
-          <CommentSection :articleId="article.id" />
         </template>
       </div>
       <SideBar class="sidebar-area" />
+    </div>
+    <div class="comment-layout">
+      <div v-show="tocVisible && tocItems.length > 0" class="comment-spacer"></div>
+      <CommentSection v-if="article" :articleId="article.id" class="comment-main" />
+      <div class="comment-sidebar-spacer"></div>
     </div>
   </div>
 </template>
@@ -851,8 +820,30 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
+.comment-layout {
+  display: flex;
+  gap: 32px;
+  margin-top: 24px;
+}
+
+.comment-spacer {
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.comment-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-sidebar-spacer {
+  width: 300px;
+  flex-shrink: 0;
+}
+
 @media (max-width: 1024px) {
-  .detail-layout {
+  .detail-layout,
+  .comment-layout {
     gap: 16px;
   }
 
@@ -860,7 +851,8 @@ onUnmounted(() => {
     width: 260px;
   }
 
-  .toc-sidebar {
+  .toc-sidebar,
+  .comment-spacer {
     display: none;
   }
 
@@ -870,12 +862,14 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .detail-layout {
+  .detail-layout,
+  .comment-layout {
     flex-direction: column;
   }
 
   .sidebar-area,
-  .toc-float-btn {
+  .toc-float-btn,
+  .comment-sidebar-spacer {
     display: none !important;
   }
 
