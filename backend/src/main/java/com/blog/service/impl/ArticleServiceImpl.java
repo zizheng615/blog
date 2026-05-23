@@ -18,8 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -54,10 +55,15 @@ public class ArticleServiceImpl implements ArticleService {
         Page<Article> pageParam = new Page<>(page, size);
         Page<Article> result = articleMapper.selectPageWithCategory(pageParam, categoryId, tagId, articleType, status);
 
-        if (result != null && result.getRecords() != null) {
+        if (result != null && !result.getRecords().isEmpty()) {
+            List<Long> articleIds = result.getRecords().stream()
+                    .map(Article::getId)
+                    .collect(Collectors.toList());
+            List<Tag> allTags = tagMapper.selectByArticleIds(articleIds);
+            Map<Long, List<Tag>> tagMap = allTags.stream()
+                    .collect(Collectors.groupingBy(Tag::getArticleId));
             for (Article article : result.getRecords()) {
-                List<Tag> tags = tagMapper.selectByArticleId(article.getId());
-                article.setTags(tags);
+                article.setTags(tagMap.getOrDefault(article.getId(), Collections.emptyList()));
             }
         }
 

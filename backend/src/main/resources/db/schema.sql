@@ -59,6 +59,11 @@ CREATE TABLE IF NOT EXISTS `article` (
     FOREIGN KEY (`author_id`) REFERENCES `user`(`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Article indexes for list page queries
+CREATE INDEX IF NOT EXISTS `idx_article_status_published` ON `article`(`status`, `published_at` DESC);
+CREATE INDEX IF NOT EXISTS `idx_article_category` ON `article`(`category_id`);
+CREATE INDEX IF NOT EXISTS `idx_article_type` ON `article`(`article_type`);
+
 -- Article-Tag junction table
 CREATE TABLE IF NOT EXISTS `article_tag` (
     `article_id` BIGINT NOT NULL,
@@ -67,6 +72,9 @@ CREATE TABLE IF NOT EXISTS `article_tag` (
     FOREIGN KEY (`article_id`) REFERENCES `article`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`tag_id`) REFERENCES `tag`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Article-Tag index for tag-based article queries
+CREATE INDEX IF NOT EXISTS `idx_article_tag_tag_id` ON `article_tag`(`tag_id`);
 
 -- Comment table
 CREATE TABLE IF NOT EXISTS `comment` (

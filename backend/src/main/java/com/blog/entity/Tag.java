@@ -22,4 +22,7 @@ public class Tag {
 
     @TableField(exist = false)
     private Integer articleCount;
+
+    @TableField(exist = false)
+    private Long articleId;
 }

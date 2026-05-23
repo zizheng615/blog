@@ -16,4 +16,14 @@ public interface TagMapper extends BaseMapper<Tag> {
 
     @Select("SELECT t.* FROM tag t INNER JOIN article_tag at ON t.id = at.tag_id WHERE at.article_id = #{articleId}")
     List<Tag> selectByArticleId(@Param("articleId") Long articleId);
+
+    @Select({
+        "<script>",
+        "SELECT t.*, at.article_id as articleId FROM tag t INNER JOIN article_tag at ON t.id = at.tag_id WHERE at.article_id IN ",
+        "<foreach collection='articleIds' item='id' open='(' separator=',' close=')'>",
+        "#{id}",
+        "</foreach>",
+        "</script>"
+    })
+    List<Tag> selectByArticleIds(@Param("articleIds") List<Long> articleIds);
 }
