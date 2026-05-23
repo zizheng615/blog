@@ -407,6 +407,7 @@ onUnmounted(() => {
   display: flex;
   gap: 32px;
   align-items: flex-start;
+  min-height: calc(100vh - 140px);
 }
 
 .article-main {
@@ -827,7 +828,7 @@ onUnmounted(() => {
  .comment-layout {
   display: flex;
   gap: 32px;
-  margin-top: 24px;
+  margin-top: 16px;
   align-items: flex-start;
 }
 

@@ -144,7 +144,7 @@ onMounted(async () => {
   text-align: center;
   margin-top: 32px;
   padding-top: 20px;
-  border-top: 1px solid #34495e;
+  border-top: 1px solid transparent;
   font-size: 0.85em;
   color: #95a5a6;
 }
