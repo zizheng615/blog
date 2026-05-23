@@ -135,10 +135,21 @@ onMounted(loadArticles)
 @media (max-width: 768px) {
   .list-layout {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .sidebar-area {
     display: none;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .filter-bar h2 {
+    font-size: 1.1em;
   }
 }
 </style>

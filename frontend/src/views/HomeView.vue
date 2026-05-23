@@ -157,10 +157,23 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .home-layout {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .sidebar-area {
     position: static;
+  }
+
+  .hero-banner {
+    padding: 16px 20px;
+  }
+
+  .hero-title {
+    font-size: 1.1em;
+  }
+
+  .hero-subtitle {
+    font-size: 0.85em;
   }
 }
 </style>

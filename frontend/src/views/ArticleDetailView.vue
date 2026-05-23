@@ -908,6 +908,7 @@ onUnmounted(() => {
   .detail-layout,
   .comment-layout {
     flex-direction: column;
+    gap: 16px;
   }
 
   .sidebar-area,
@@ -916,8 +917,33 @@ onUnmounted(() => {
     display: none !important;
   }
 
+  .article-header {
+    padding: 20px 16px;
+  }
+
+  .article-body {
+    padding: 16px;
+  }
+
+  .tags-header {
+    padding: 12px 16px;
+  }
+
+  .tags-body {
+    padding: 0 16px 14px;
+  }
+
   .title {
-    font-size: 1.5em;
+    font-size: 1.4em;
+  }
+
+  .meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .stats {
+    gap: 12px;
   }
 }
 </style>
