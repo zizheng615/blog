@@ -1,10 +1,19 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import compression from 'vite-plugin-compression'
 
 export default defineConfig({
   base: '/blog/',
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    compression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 10240,
+      deleteOriginFile: false,
+    }),
+  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -14,7 +23,19 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
-    chunkSizeWarningLimit: 2000,
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          'vendor-ui': ['element-plus'],
+          'vendor-editor': ['@wangeditor/editor', '@wangeditor/editor-for-vue', '@wangeditor/plugin-formula'],
+          'vendor-highlight': ['highlight.js'],
+          'vendor-katex': ['katex'],
+          'vendor-utils': ['axios', 'dayjs', 'dompurify'],
+        },
+      },
+    },
   },
   optimizeDeps: {
     exclude: ['emoji-picker-element'],
