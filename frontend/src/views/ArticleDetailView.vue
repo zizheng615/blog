@@ -56,6 +56,40 @@
     </aside>
 
     <div class="detail-layout" :class="{ 'has-toc': tocVisible && tocItems.length > 0 }">
+      <aside
+        v-if="tocItems.length > 0"
+        v-show="tocVisible"
+        class="toc-sidebar"
+      >
+        <div class="toc-sidebar-inner">
+          <div class="toc-sidebar-header">
+            <span class="toc-sidebar-title">
+              <el-icon class="icon-glow-purple"><Document /></el-icon>
+              目录
+            </span>
+            <button class="toc-sidebar-close" @click="tocVisible = false">
+              <el-icon class="icon-glow-gray"><Close /></el-icon>
+            </button>
+          </div>
+          <nav ref="tocNavRef" class="toc-sidebar-nav">
+            <a
+              v-for="item in tocItems"
+              :key="item.id"
+              :ref="el => { if (el) tocLinkRefs[item.id] = el }"
+              :href="`#${item.id}`"
+              class="toc-sidebar-link"
+              :class="{
+                'toc-sidebar-active': activeTocId === item.id,
+                [`toc-sidebar-level-${item.level}`]: true
+              }"
+              @click.prevent="scrollToHeading(item.id)"
+            >
+              {{ item.text }}
+            </a>
+          </nav>
+        </div>
+      </aside>
+
       <div class="article-main">
         <div v-if="loading" class="loading">
           <el-skeleton :rows="10" animated />
@@ -408,24 +442,19 @@ onUnmounted(() => {
 .article-main {
   flex: 1;
   min-width: 0;
-  transition: margin-left 0.3s ease;
 }
 
-.detail-layout.has-toc .article-main {
-  margin-left: 272px;
-}
-
-/* 固定目录 */
-.toc-fixed {
-  position: fixed;
-  left: max(20px, calc((100vw - 1200px) / 2 + 20px));
-  top: 80px;
+/* 侧边目录 */
+.toc-sidebar {
   width: 240px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 80px;
+  align-self: start;
   max-height: calc(100vh - 100px);
-  z-index: 90;
 }
 
-.toc-fixed-inner {
+.toc-sidebar-inner {
   background: white;
   border-radius: 12px;
   padding: 20px;
@@ -443,7 +472,7 @@ onUnmounted(() => {
   }
 }
 
-.toc-fixed-header {
+.toc-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -452,7 +481,7 @@ onUnmounted(() => {
   border-bottom: 1px solid #ecf0f1;
 }
 
-.toc-fixed-title {
+.toc-sidebar-title {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -461,7 +490,7 @@ onUnmounted(() => {
   color: #2c3e50;
 }
 
-.toc-fixed-close {
+.toc-sidebar-close {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -480,13 +509,13 @@ onUnmounted(() => {
   }
 }
 
-.toc-fixed-nav {
+.toc-sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.toc-fixed-link {
+.toc-sidebar-link {
   display: block;
   padding: 6px 10px;
   border-radius: 6px;
@@ -504,28 +533,28 @@ onUnmounted(() => {
   }
 }
 
-.toc-fixed-level-1 {
+.toc-sidebar-level-1 {
   font-weight: 600;
   font-size: 0.88em;
 }
 
-.toc-fixed-level-2 {
+.toc-sidebar-level-2 {
   padding-left: 18px;
 }
 
-.toc-fixed-level-3 {
+.toc-sidebar-level-3 {
   padding-left: 32px;
   font-size: 0.82em;
   color: #718096;
 }
 
-.toc-fixed-level-4 {
+.toc-sidebar-level-4 {
   padding-left: 46px;
   font-size: 0.8em;
   color: #a0aec0;
 }
 
-.toc-fixed-active {
+.toc-sidebar-active {
   background: #ecf5ff;
   color: #409eff;
   border-left-color: #409eff;
@@ -827,15 +856,11 @@ onUnmounted(() => {
     gap: 16px;
   }
 
-  .detail-layout.has-toc .article-main {
-    margin-left: 0;
-  }
-
   .sidebar-area {
     width: 260px;
   }
 
-  .toc-fixed {
+  .toc-sidebar {
     display: none;
   }
 
