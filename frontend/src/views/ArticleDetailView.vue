@@ -719,14 +719,12 @@ onUnmounted(() => {
 .article-body {
   background: white;
   padding: 32px;
-  border-radius: 0 0 12px 12px;
   min-height: 300px;
 }
 
 .article-footer {
   background: white;
   padding: 0;
-  margin-top: 1px;
   border-radius: 0 0 12px 12px;
   overflow: hidden;
 }
