@@ -406,6 +406,7 @@ onUnmounted(() => {
 .detail-layout {
   display: flex;
   gap: 32px;
+  align-items: flex-start;
 }
 
 .article-main {
@@ -796,7 +797,7 @@ onUnmounted(() => {
 /* 标签折叠过渡动画 */
 .tags-collapse-enter-active,
 .tags-collapse-leave-active {
-  transition: all 0.25s ease;
+  transition: max-height 0.25s ease, opacity 0.25s ease;
   overflow: hidden;
 }
 
@@ -823,10 +824,11 @@ onUnmounted(() => {
   height: fit-content;
 }
 
-.comment-layout {
+ .comment-layout {
   display: flex;
   gap: 32px;
   margin-top: 24px;
+  align-items: flex-start;
 }
 
 .comment-spacer {
