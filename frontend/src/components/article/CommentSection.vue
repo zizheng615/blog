@@ -136,7 +136,7 @@ onMounted(loadComments)
   background: white;
   border-radius: 12px;
   padding: 24px;
-  margin-top: 32px;
+  margin-top: 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 

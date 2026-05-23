@@ -828,7 +828,7 @@ onUnmounted(() => {
  .comment-layout {
   display: flex;
   gap: 32px;
-  margin-top: 16px;
+  margin-top: 32px;
   align-items: flex-start;
 }
 
