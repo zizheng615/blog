@@ -418,7 +418,7 @@ onUnmounted(() => {
 /* 固定目录 */
 .toc-fixed {
   position: fixed;
-  left: 20px;
+  left: max(20px, calc((100vw - 1200px) / 2 + 20px));
   top: 80px;
   width: 240px;
   max-height: calc(100vh - 100px);
