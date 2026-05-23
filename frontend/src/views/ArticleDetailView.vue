@@ -402,7 +402,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .detail-layout {
   display: flex;
-  gap: 24px;
+  gap: 32px;
 }
 
 .article-main {
@@ -412,7 +412,7 @@ onUnmounted(() => {
 }
 
 .detail-layout.has-toc .article-main {
-  margin-left: 264px;
+  margin-left: 272px;
 }
 
 /* 固定目录 */
