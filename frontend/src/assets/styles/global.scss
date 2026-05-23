@@ -128,17 +128,65 @@ body {
 @media (max-width: 768px) {
   .article-tech,
   .article-life {
-    iframe {
-      min-height: 180px;
+    h1 { font-size: 1.5em; margin: 1.2em 0 0.6em; }
+    h2 { font-size: 1.25em; padding-bottom: 0.25em; margin: 1.2em 0 0.6em; }
+    h3 { font-size: 1.1em; margin: 1.2em 0 0.6em; }
+    h4 { font-size: 1em; margin: 1.2em 0 0.6em; }
+
+    p {
+      font-size: 1em;
+      line-height: 1.75;
+      margin: 0.8em 0;
     }
 
-    video {
-      min-height: 180px;
+    code {
+      font-size: 0.85em;
     }
 
     pre {
-      padding: 12px;
-      font-size: 0.8em;
+      padding: 10px 12px;
+      font-size: 0.78em;
+      border-radius: 6px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+
+      code {
+        font-size: 0.9em;
+      }
+    }
+
+    iframe {
+      min-height: 168px;
+      border-radius: 6px;
+    }
+
+    video {
+      min-height: 168px;
+      border-radius: 6px;
+    }
+
+    img {
+      border-radius: 8px;
+      margin: 1em 0;
+    }
+
+    table {
+      font-size: 0.85em;
+    }
+
+    ul, ol {
+      padding-left: 1.5em;
+      margin: 0.8em 0;
+    }
+
+    li {
+      margin: 0.3em 0;
+    }
+
+    blockquote {
+      padding: 10px 14px;
+      margin: 1em 0;
+      border-radius: 0 6px 6px 0;
     }
   }
 }

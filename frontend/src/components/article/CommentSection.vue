@@ -245,4 +245,60 @@ onMounted(loadComments)
   color: #4a5568;
   font-size: 0.95em;
 }
+
+@media (max-width: 768px) {
+  .comment-section {
+    padding: 16px 14px;
+    border-radius: 8px;
+  }
+
+  .section-title {
+    font-size: 1em;
+    margin-bottom: 14px;
+  }
+
+  .comment-form {
+    margin-bottom: 16px;
+  }
+
+  .comment-list {
+    gap: 14px;
+  }
+
+  .comment-item {
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  .comment-header {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85em;
+  }
+
+  .comment-content {
+    padding-left: 0;
+    font-size: 0.95em;
+    line-height: 1.65;
+  }
+
+  .replies {
+    margin-left: 0;
+    margin-top: 10px;
+    padding-left: 12px;
+  }
+
+  .reply-item {
+    padding: 8px 0;
+  }
+
+  .reply-content {
+    font-size: 0.9em;
+  }
+}
 </style>

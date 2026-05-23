@@ -908,42 +908,76 @@ onUnmounted(() => {
   .detail-layout,
   .comment-layout {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .article-main {
+    width: 100%;
   }
 
   .sidebar-area,
+  .toc-sidebar,
   .toc-float-btn,
+  .comment-spacer,
   .comment-sidebar-spacer {
     display: none !important;
   }
 
   .article-header {
-    padding: 20px 16px;
+    padding: 16px 14px;
+    border-radius: 8px 8px 0 0;
   }
 
   .article-body {
-    padding: 16px;
+    padding: 14px;
+  }
+
+  .article-footer {
+    border-radius: 0 0 8px 8px;
   }
 
   .tags-header {
-    padding: 12px 16px;
+    padding: 10px 14px;
   }
 
   .tags-body {
-    padding: 0 16px 14px;
+    padding: 0 14px 12px;
+    gap: 8px;
   }
 
   .title {
-    font-size: 1.4em;
+    font-size: 1.35em;
+    line-height: 1.35;
+    margin-bottom: 8px;
   }
 
   .meta {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .type-badge {
+    font-size: 0.72em;
+    padding: 2px 8px;
+  }
+
+  .category {
+    font-size: 0.85em;
+  }
+
+  .date {
+    font-size: 0.82em;
   }
 
   .stats {
     gap: 12px;
+    font-size: 0.85em;
+  }
+
+  .comment-layout {
+    margin-top: 16px;
   }
 }
 </style>
