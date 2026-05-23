@@ -226,6 +226,38 @@ body {
     font-size: 1.05em;
   }
 
+  code {
+    background: #f5f0eb;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+    color: #c45c48;
+  }
+
+  pre {
+    background: #1e1e1e;
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    white-space: pre;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    display: block;
+    max-width: 100%;
+    margin: 1em 0;
+
+    code {
+      background: none;
+      color: #d4d4d4;
+      padding: 0;
+      font-size: 0.85em;
+      white-space: pre;
+      display: block;
+      max-width: 100%;
+    }
+  }
+
   img {
     max-width: 100%;
     border-radius: 12px;
@@ -241,5 +273,33 @@ body {
     margin: 1.2em 0;
     border-radius: 0 8px 8px 0;
     color: #4a5568;
+  }
+}
+
+// 强制所有代码块统一横向滑动（覆盖第三方高亮库可能引入的差异）
+.article-tech,
+.article-life {
+  pre,
+  pre code,
+  pre code.hljs,
+  code.hljs {
+    overflow-x: auto !important;
+    white-space: pre !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-x !important;
+    word-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+  pre {
+    display: block !important;
+    max-width: 100% !important;
+  }
+
+  pre code,
+  pre code.hljs,
+  code.hljs {
+    display: block !important;
+    max-width: 100% !important;
   }
 }
