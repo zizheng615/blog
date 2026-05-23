@@ -419,7 +419,8 @@ onUnmounted(() => {
   flex-shrink: 0;
   position: sticky;
   top: 80px;
-  align-self: start;
+  align-self: flex-start;
+  height: fit-content;
   max-height: calc(100vh - 100px);
 }
 
@@ -816,6 +817,10 @@ onUnmounted(() => {
 .sidebar-area {
   width: 300px;
   flex-shrink: 0;
+  position: sticky;
+  top: 80px;
+  align-self: flex-start;
+  height: fit-content;
 }
 
 .comment-layout {
