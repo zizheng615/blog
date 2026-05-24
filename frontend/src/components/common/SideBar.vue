@@ -83,6 +83,17 @@ onMounted(async () => {
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #e0e6ed;
+    border-radius: 2px;
+  }
 }
 
 .sidebar-section {
