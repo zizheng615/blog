@@ -91,8 +91,13 @@ onMounted(async () => {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #e0e6ed;
+    background: transparent;
     border-radius: 2px;
+    transition: background 0.25s ease;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: #e0e6ed;
   }
 }
 
