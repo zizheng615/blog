@@ -451,6 +451,19 @@ const addCopyButtons = () => {
         fallbackCopy(text, btn)
       }
     })
+
+    // 移动端：触摸按钮时阻止冒泡，避免触发 pre 的 touchstart
+    btn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true })
+
+    // 移动端：触摸代码框时显示按钮，3秒后自动隐藏
+    pre.addEventListener('touchstart', () => {
+      clearTimeout(pre._copyBtnHideTimer)
+      pre.classList.add('is-touch-active')
+      pre._copyBtnHideTimer = setTimeout(() => {
+        pre.classList.remove('is-touch-active')
+      }, 3000)
+    }, { passive: true })
+
     pre.appendChild(btn)
   })
 }

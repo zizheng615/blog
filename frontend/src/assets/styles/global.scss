@@ -63,6 +63,32 @@ body {
     max-width: 100%;
     margin: 1em 0;
     position: relative;
+    // 滚动条默认隐藏
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+
+    &::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: transparent;
+      border-radius: 3px;
+    }
+
+    // 鼠标移入时显示滚动条
+    &:hover {
+      scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.18);
+      }
+    }
 
     code {
       background: none;
@@ -303,37 +329,47 @@ body {
     max-width: 100% !important;
   }
 
-  /* 复制按钮 */
+  /* 复制按钮：简洁精致设计 */
   .code-copy-btn {
     position: absolute;
     top: 8px;
     right: 8px;
-    padding: 4px 10px;
+    padding: 5px 14px;
     font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #ccc;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s, background 0.2s;
+    visibility: hidden;
+    transform: translateY(-3px);
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
     z-index: 2;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 
     &:hover {
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
+      color: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.18);
     }
 
     &:active {
-      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-3px) scale(0.95);
     }
   }
 
+  /* 桌面端 hover / 移动端 touch 激活时显示 */
   pre:hover .code-copy-btn,
-  pre:focus-within .code-copy-btn {
+  pre.is-touch-active .code-copy-btn {
     opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
   }
 }
 
@@ -350,9 +386,9 @@ body {
       overscroll-behavior-x: contain;
 
       .code-copy-btn {
-        // 移动端始终显示复制按钮，便于点击
-        opacity: 1;
-        padding: 6px 12px;
+        // 移动端触摸激活时显示（由 JS 控制 is-touch-active 类）
+        // 默认隐藏，更大点击区域
+        padding: 6px 14px;
         font-size: 13px;
         top: 6px;
         right: 6px;
