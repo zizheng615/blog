@@ -57,11 +57,12 @@ body {
     border-radius: 8px;
     padding: 16px;
     overflow-x: auto;
+    overflow-y: visible;
     white-space: pre;
-    -webkit-overflow-scrolling: touch;
     display: block;
     max-width: 100%;
     margin: 1em 0;
+    position: relative;
 
     code {
       background: none;
@@ -155,10 +156,11 @@ body {
       font-size: 0.78em;
       border-radius: 6px;
       overflow-x: auto;
+      overflow-y: visible;
       white-space: pre;
-      -webkit-overflow-scrolling: touch;
       display: block;
       max-width: 100%;
+      overscroll-behavior-x: contain;
 
       code {
         font-size: 0.9em;
@@ -240,12 +242,12 @@ body {
     border-radius: 8px;
     padding: 16px;
     overflow-x: auto;
+    overflow-y: visible;
     white-space: pre;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
     display: block;
     max-width: 100%;
     margin: 1em 0;
+    position: relative;
 
     code {
       background: none;
@@ -276,7 +278,7 @@ body {
   }
 }
 
-// 强制所有代码块统一横向滑动（覆盖第三方高亮库可能引入的差异）
+// 代码块横向滑动 + 复制按钮样式
 .article-tech,
 .article-life {
   pre,
@@ -285,8 +287,6 @@ body {
   code.hljs {
     overflow-x: auto !important;
     white-space: pre !important;
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-x !important;
     word-wrap: normal !important;
     word-break: normal !important;
   }
@@ -301,5 +301,62 @@ body {
   code.hljs {
     display: block !important;
     max-width: 100% !important;
+  }
+
+  /* 复制按钮 */
+  .code-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #ccc;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background 0.2s;
+    user-select: none;
+    z-index: 2;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    &:active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  pre:hover .code-copy-btn,
+  pre:focus-within .code-copy-btn {
+    opacity: 1;
+  }
+}
+
+/* 移动端代码框优化 */
+@media (max-width: 768px) {
+  .article-tech,
+  .article-life {
+    pre {
+      // 移除 touch-action 限制，让浏览器自行处理触摸事件
+      // 解决：垂直滑动被拦截、拖动卡顿、误退出页面
+      touch-action: auto !important;
+      -webkit-overflow-scrolling: auto !important;
+      // 防止横向滚动到边界时触发页面后退/前进
+      overscroll-behavior-x: contain;
+
+      .code-copy-btn {
+        // 移动端始终显示复制按钮，便于点击
+        opacity: 1;
+        padding: 6px 12px;
+        font-size: 13px;
+        top: 6px;
+        right: 6px;
+      }
+    }
   }
 }

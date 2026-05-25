@@ -384,6 +384,9 @@ watch(sanitizedContent, () => {
     setupScrollObserver()
   })
 
+  // 为代码块添加复制按钮
+  addCopyButtons()
+
   // 非关键渲染（空闲时分批执行）：代码高亮、数学公式
   // 避免一次性遍历大量 DOM 阻塞主线程
   const codeBlocks = articleBodyRef.value.querySelectorAll('pre code')
@@ -420,6 +423,55 @@ watch(sanitizedContent, () => {
     })
   })
 }, { flush: 'post' })
+
+const addCopyButtons = () => {
+  if (!articleBodyRef.value) return
+  articleBodyRef.value.querySelectorAll('pre').forEach(pre => {
+    // 避免重复添加
+    if (pre.querySelector('.code-copy-btn')) return
+
+    const code = pre.querySelector('code')
+    if (!code) return
+
+    const btn = document.createElement('button')
+    btn.className = 'code-copy-btn'
+    btn.textContent = '复制'
+    btn.setAttribute('aria-label', '复制代码')
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const text = code.textContent || ''
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = '已复制'
+          setTimeout(() => { btn.textContent = '复制' }, 2000)
+        }).catch(() => {
+          fallbackCopy(text, btn)
+        })
+      } else {
+        fallbackCopy(text, btn)
+      }
+    })
+    pre.appendChild(btn)
+  })
+}
+
+const fallbackCopy = (text, btn) => {
+  const ta = document.createElement('textarea')
+  ta.value = text
+  ta.style.position = 'fixed'
+  ta.style.opacity = '0'
+  document.body.appendChild(ta)
+  ta.select()
+  try {
+    document.execCommand('copy')
+    btn.textContent = '已复制'
+    setTimeout(() => { btn.textContent = '复制' }, 2000)
+  } catch (err) {
+    btn.textContent = '复制失败'
+    setTimeout(() => { btn.textContent = '复制' }, 2000)
+  }
+  document.body.removeChild(ta)
+}
 
 const renderFormulaSpans = (container) => {
   const spans = container.querySelectorAll('[data-w-e-type="formula"]')
