@@ -289,12 +289,18 @@ onMounted(() => {
   loadSavedPosition()
 })
 
-const sanitizedContent = computed(() => {
-  return article.value?.content ? DOMPurify.sanitize(article.value.content, {
+const sanitizedContent = ref('')
+
+const doSanitize = (raw) => {
+  if (!raw) return ''
+  return DOMPurify.sanitize(raw, {
     ADD_TAGS: ['video', 'source', 'track', 'iframe', 'embed'],
     ADD_ATTR: ['data-w-e-type', 'data-w-e-is-void', 'data-w-e-is-inline', 'data-value', 'src', 'controls', 'autoplay', 'loop', 'muted', 'poster', 'width', 'height', 'type', 'frameborder', 'allowfullscreen', 'allow', 'style', 'preload', 'playsinline']
-  }) : ''
-})
+  })
+}
+
+// requestIdleCallback polyfill（Safari 兼容）
+const whenIdle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1))
 
 const generateToc = () => {
   if (!articleBodyRef.value) return
@@ -370,26 +376,48 @@ watch(activeTocId, (newId) => {
 
 watch(sanitizedContent, () => {
   if (!articleBodyRef.value) return
-  renderFormulaSpans(articleBodyRef.value)
-  articleBodyRef.value.querySelectorAll('pre code').forEach((block) => {
-    try { hljs.highlightElement(block) } catch (e) { /* best-effort */ }
-  })
-  renderMathInElement(articleBodyRef.value, {
-    delimiters: [
-      { left: '$$', right: '$$', display: true },
-      { left: '$', right: '$', display: false },
-      { left: '\\(', right: '\\)', display: false },
-      { left: '\\[', right: '\\]', display: true }
-    ],
-    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-    ignoredClasses: ['katex'],
-    throwOnError: false
-  })
 
-  // 生成目录并设置滚动监听
+  // 关键渲染（立即执行）：WangEditor 公式、目录
+  renderFormulaSpans(articleBodyRef.value)
   generateToc()
   requestAnimationFrame(() => {
     setupScrollObserver()
+  })
+
+  // 非关键渲染（空闲时分批执行）：代码高亮、数学公式
+  // 避免一次性遍历大量 DOM 阻塞主线程
+  const codeBlocks = articleBodyRef.value.querySelectorAll('pre code')
+  const batchSize = 5
+
+  const highlightBatch = (deadline) => {
+    let count = 0
+    let i = 0
+    for (; i < codeBlocks.length; i++) {
+      if (count >= batchSize && (deadline == null || deadline.timeRemaining() <= 0)) {
+        break
+      }
+      try { hljs.highlightElement(codeBlocks[i]) } catch (e) { /* best-effort */ }
+      count++
+    }
+    if (i < codeBlocks.length) {
+      whenIdle(highlightBatch)
+    }
+  }
+  whenIdle(highlightBatch)
+
+  // 数学公式渲染也延迟到空闲时
+  whenIdle(() => {
+    renderMathInElement(articleBodyRef.value, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true }
+      ],
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+      ignoredClasses: ['katex'],
+      throwOnError: false
+    })
   })
 }, { flush: 'post' })
 
@@ -420,6 +448,8 @@ const loadArticle = async () => {
   try {
     const id = Number(route.params.id)
     article.value = await getArticleById(id)
+    // DOMPurify 只执行一次，结果缓存到 ref 避免 computed 重复计算
+    sanitizedContent.value = doSanitize(article.value?.content)
     recordVisit({ pageUrl: window.location.href })
   } catch (e) {
     console.error(e)

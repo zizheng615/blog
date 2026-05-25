@@ -91,14 +91,25 @@ public class ArticleServiceImpl implements ArticleService {
         return article;
     }
 
+    private static final String ARTICLE_SLUG_KEY = "article:slug";
+
     @Override
     public Article getBySlug(String slug) {
+        String cacheKey = ARTICLE_SLUG_KEY + ":" + slug;
+        Article cached = redisCache.get(cacheKey);
+        if (cached != null) {
+            log.debug("Article slug cache hit: {}", cacheKey);
+            return cached;
+        }
+
         Article article = articleMapper.selectOne(new LambdaQueryWrapper<Article>()
                 .eq(Article::getSlug, slug));
         if (article == null) {
             throw new BlogException(ErrorCode.ARTICLE_NOT_FOUND.getCode(), ErrorCode.ARTICLE_NOT_FOUND.getMessage());
         }
         article.setTags(tagMapper.selectByArticleId(article.getId()));
+        redisCache.set(cacheKey, article, CACHE_TTL, TimeUnit.MINUTES);
+        log.debug("Article slug cached: {}", cacheKey);
         return article;
     }
 
@@ -146,9 +157,10 @@ public class ArticleServiceImpl implements ArticleService {
 
     private void clearArticleCache() {
         redisCache.deleteByPattern(ARTICLE_LIST_KEY + ":*");
+        redisCache.deleteByPattern(ARTICLE_SLUG_KEY + ":*");
         redisCache.delete("tag:all");
         redisCache.delete("category:all");
-        log.info("Article list, tag, and category caches cleared");
+        log.info("Article list, slug, tag, and category caches cleared");
     }
 
     private void saveArticleTags(Long articleId, List<Long> tagIds) {

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.entity.Article;
 import com.blog.entity.User;
 import com.blog.service.ArticleService;
+import com.blog.service.AsyncTaskService;
 import com.blog.service.UserService;
 import com.blog.utils.HtmlUtils;
 import com.blog.utils.Result;
@@ -27,6 +28,7 @@ public class ArticleController {
 
     private final ArticleService articleService;
     private final UserService userService;
+    private final AsyncTaskService asyncTaskService;
 
     private Long currentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -53,8 +55,8 @@ public class ArticleController {
 
     @GetMapping("/articles/{id}")
     public Result<Article> getById(@PathVariable Long id) {
-        articleService.incrementViewCount(id);
         Article article = articleService.getById(id);
+        asyncTaskService.incrementViewCountAsync(id);
         return Result.success(article);
     }
 
