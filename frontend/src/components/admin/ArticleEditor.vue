@@ -228,7 +228,17 @@ import renderMathInElement from 'katex/contrib/auto-render'
 import { createArticle, updateArticle } from '@/api/article'
 import { createTag, deleteTag } from '@/api/tag'
 
-const mdParser = new MarkdownIt({ html: true, linkify: true, breaks: false })
+const mdParser = new MarkdownIt({
+  html: true,
+  linkify: true,
+  breaks: false,
+  highlight: (code, lang) => {
+    if (lang && hljs.getLanguage(lang)) {
+      return '<pre><code class="language-' + lang + '">' + hljs.escape(code) + '</code></pre>'
+    }
+    return '<pre><code>' + hljs.escape(code) + '</code></pre>'
+  }
+})
 
 const mathMenuIcon = (label) =>
   `<svg viewBox="0 0 1024 1024" width="1em" height="1em" fill="currentColor"><text x="80" y="780" font-size="700" font-family="Cambria,Times,serif" font-style="italic">${label}</text></svg>`

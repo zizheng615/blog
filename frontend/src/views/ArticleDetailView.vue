@@ -143,7 +143,7 @@ import yaml from 'highlight.js/lib/languages/yaml'
 import go from 'highlight.js/lib/languages/go'
 import rust from 'highlight.js/lib/languages/rust'
 import cpp from 'highlight.js/lib/languages/cpp'
-import 'highlight.js/styles/github.css'
+import 'highlight.js/styles/github-dark.css'
 
 hljs.registerLanguage('javascript', javascript)
 hljs.registerLanguage('js', javascript)
