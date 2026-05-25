@@ -228,15 +228,18 @@ import renderMathInElement from 'katex/contrib/auto-render'
 import { createArticle, updateArticle } from '@/api/article'
 import { createTag, deleteTag } from '@/api/tag'
 
+const escapeHtml = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
 const mdParser = new MarkdownIt({
   html: true,
   linkify: true,
   breaks: false,
   highlight: (code, lang) => {
+    const escaped = escapeHtml(code)
     if (lang && hljs.getLanguage(lang)) {
-      return '<pre><code class="language-' + lang + '">' + hljs.escape(code) + '</code></pre>'
+      return '<pre><code class="language-' + lang + '">' + escaped + '</code></pre>'
     }
-    return '<pre><code>' + hljs.escape(code) + '</code></pre>'
+    return '<pre><code>' + escaped + '</code></pre>'
   }
 })
 

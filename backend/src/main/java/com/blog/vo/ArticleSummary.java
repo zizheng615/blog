@@ -15,6 +15,7 @@ public class ArticleSummary {
     private String title;
     private String slug;
     private String summary;
+    private String contentMd;
     private String coverImage;
     private Long categoryId;
     private Long authorId;

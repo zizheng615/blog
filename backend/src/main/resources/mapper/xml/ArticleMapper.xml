@@ -88,6 +88,7 @@
             a.title,
             a.slug,
             a.summary,
+            a.content_md,
             a.cover_image,
             a.category_id,
             a.author_id,
