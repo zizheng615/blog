@@ -32,6 +32,7 @@
         <result column="title" property="title"/>
         <result column="slug" property="slug"/>
         <result column="summary" property="summary"/>
+        <result column="content_md" property="contentMd"/>
         <result column="cover_image" property="coverImage"/>
         <result column="category_id" property="categoryId"/>
         <result column="author_id" property="authorId"/>
