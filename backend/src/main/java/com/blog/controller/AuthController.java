@@ -1,9 +1,8 @@
 package com.blog.controller;
 
 import com.blog.dto.LoginRequest;
-import com.blog.entity.User;
+import com.blog.security.CustomUserDetails;
 import com.blog.security.JwtTokenProvider;
-import com.blog.service.UserService;
 import com.blog.utils.Result;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +21,6 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserService userService;
 
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
@@ -31,17 +29,17 @@ public class AuthController {
         );
 
         String token = jwtTokenProvider.generateToken(authentication.getName());
-        User user = userService.getByUsername(authentication.getName());
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
         Map<String, Object> result = new HashMap<>();
         result.put("token", token);
         result.put("tokenType", "Bearer");
         result.put("expiresIn", 86400);
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("id", user.getId());
-        userInfo.put("username", user.getUsername());
-        userInfo.put("nickname", user.getNickname());
-        userInfo.put("avatar", user.getAvatar());
+        userInfo.put("id", userDetails.getId());
+        userInfo.put("username", userDetails.getUsername());
+        userInfo.put("nickname", userDetails.getNickname());
+        userInfo.put("avatar", userDetails.getAvatar());
         result.put("user", userInfo);
 
         return Result.success(result);

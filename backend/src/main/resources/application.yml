@@ -87,6 +87,10 @@ spring:
       test-while-idle: true
       validation-query: SELECT 1
 
+security:
+  bcrypt:
+    strength: 6
+
 server:
   port: 8080
   servlet:
@@ -108,6 +112,10 @@ spring:
       min-idle: 10
       max-active: 50
       max-wait: 60000
+
+security:
+  bcrypt:
+    strength: 10
 
 server:
   port: 8080

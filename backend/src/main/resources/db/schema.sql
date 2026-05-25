@@ -137,9 +137,9 @@ CREATE TABLE IF NOT EXISTS `site_config` (
 
 -- Insert seed data
 
--- Admin user (password: admin123, BCrypt encoded)
+-- Admin user (password: admin123, BCrypt encoded with strength 6)
 INSERT INTO `user` (`username`, `password`, `nickname`, `email`, `role`) VALUES
-('admin', '$2b$10$Fq4L5QZyEO.E6E/KmPc0he3xTwvIMKpI/Dgt135B/Lt5QD7zrNSSi', '博主', 'admin@blog.com', 'ADMIN');
+('admin', '$2b$06$OsqXvMfCkYOxKVjft3mqPus/iVBrs8ccKPM3tHR3JzIXRrEZvwue.', '博主', 'admin@blog.com', 'ADMIN');
 
 -- Categories
 INSERT INTO `category` (`name`, `slug`, `description`, `sort_order`) VALUES
