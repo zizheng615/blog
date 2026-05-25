@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS `article` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Article indexes for list page queries
+-- 复合索引覆盖列表查询最常用的条件组合：status + category_id + article_type + 排序
+CREATE INDEX IF NOT EXISTS `idx_article_list` ON `article`(`status`, `category_id`, `article_type`, `published_at` DESC);
 CREATE INDEX IF NOT EXISTS `idx_article_status_published` ON `article`(`status`, `published_at` DESC);
 CREATE INDEX IF NOT EXISTS `idx_article_category` ON `article`(`category_id`);
 CREATE INDEX IF NOT EXISTS `idx_article_type` ON `article`(`article_type`);

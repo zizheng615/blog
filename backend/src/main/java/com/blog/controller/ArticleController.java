@@ -44,7 +44,7 @@ public class ArticleController {
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Long tagId,
             @RequestParam(required = false) String type) {
-        Page<Article> articlePage = articleService.listPage(page, size, categoryId, tagId, type, "PUBLISHED");
+        Page<com.blog.vo.ArticleSummary> articlePage = articleService.listPage(page, size, categoryId, tagId, type, "PUBLISHED");
         Map<String, Object> result = new HashMap<>();
         result.put("list", articlePage.getRecords());
         result.put("total", articlePage.getTotal());
@@ -72,7 +72,7 @@ public class ArticleController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String status) {
-        Page<Article> articlePage = articleService.listPage(page, size, null, null, null, status);
+        Page<com.blog.vo.ArticleSummary> articlePage = articleService.listPage(page, size, null, null, null, status);
         Map<String, Object> result = new HashMap<>();
         result.put("list", articlePage.getRecords());
         result.put("total", articlePage.getTotal());

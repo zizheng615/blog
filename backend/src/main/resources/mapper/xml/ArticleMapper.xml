@@ -27,6 +27,29 @@
         </association>
     </resultMap>
 
+    <resultMap id="SummaryResultMap" type="com.blog.vo.ArticleSummary">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="slug" property="slug"/>
+        <result column="summary" property="summary"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="author_id" property="authorId"/>
+        <result column="article_type" property="articleType"/>
+        <result column="status" property="status"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="comment_count" property="commentCount"/>
+        <result column="is_top" property="isTop"/>
+        <result column="published_at" property="publishedAt"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <association property="category" javaType="com.blog.entity.Category">
+            <id column="cat_id" property="id"/>
+            <result column="cat_name" property="name"/>
+            <result column="cat_slug" property="slug"/>
+        </association>
+    </resultMap>
+
     <select id="selectPageWithCategory" resultMap="BaseResultMap">
         SELECT
             a.*,
@@ -50,6 +73,49 @@
                     SELECT 1 FROM article_tag at
                     WHERE at.article_id = a.id AND at.tag_id = #{tagId}
                 )
+            </if>
+        </where>
+        ORDER BY a.published_at DESC
+    </select>
+
+    <!--
+      列表专用查询：排除 content/content_md 大字段，减少网络传输和内存占用。
+      tag 过滤从 EXISTS 子查询改为 INNER JOIN，大数据量时性能更好。
+    -->
+    <select id="selectPageSummary" resultMap="SummaryResultMap">
+        SELECT DISTINCT
+            a.id,
+            a.title,
+            a.slug,
+            a.summary,
+            a.cover_image,
+            a.category_id,
+            a.author_id,
+            a.article_type,
+            a.status,
+            a.view_count,
+            a.comment_count,
+            a.is_top,
+            a.published_at,
+            a.created_at,
+            a.updated_at,
+            c.id as cat_id,
+            c.name as cat_name,
+            c.slug as cat_slug
+        FROM article a
+        LEFT JOIN category c ON a.category_id = c.id
+        <if test="tagId != null">
+            INNER JOIN article_tag at ON a.id = at.article_id AND at.tag_id = #{tagId}
+        </if>
+        <where>
+            <if test="status != null and status != ''">
+                AND a.status = #{status}
+            </if>
+            <if test="categoryId != null">
+                AND a.category_id = #{categoryId}
+            </if>
+            <if test="articleType != null and articleType != ''">
+                AND a.article_type = #{articleType}
             </if>
         </where>
         ORDER BY a.published_at DESC

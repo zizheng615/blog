@@ -6,7 +6,7 @@ import com.blog.entity.Article;
 import java.util.List;
 
 public interface ArticleService {
-    Page<Article> listPage(Integer page, Integer size, Long categoryId, Long tagId, String articleType, String status);
+    Page<com.blog.vo.ArticleSummary> listPage(Integer page, Integer size, Long categoryId, Long tagId, String articleType, String status);
     Article getById(Long id);
     Article getBySlug(String slug);
     Article create(Article article, List<Long> tagIds);

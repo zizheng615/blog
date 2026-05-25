@@ -37,7 +37,7 @@ public class ArticleServiceImpl implements ArticleService {
     private static final long CACHE_TTL = 30;
 
     @Override
-    public Page<Article> listPage(Integer page, Integer size, Long categoryId, Long tagId, String articleType, String status) {
+    public Page<com.blog.vo.ArticleSummary> listPage(Integer page, Integer size, Long categoryId, Long tagId, String articleType, String status) {
         String cacheKey = String.format("%s:%d:%d:%s:%s:%s:%s",
                 ARTICLE_LIST_KEY, page, size,
                 categoryId != null ? categoryId : "null",
@@ -46,26 +46,14 @@ public class ArticleServiceImpl implements ArticleService {
                 status != null ? status : "null");
 
         @SuppressWarnings("unchecked")
-        Page<Article> cached = redisCache.get(cacheKey);
+        Page<com.blog.vo.ArticleSummary> cached = redisCache.get(cacheKey);
         if (cached != null) {
             log.debug("Article list cache hit: {}", cacheKey);
             return cached;
         }
 
-        Page<Article> pageParam = new Page<>(page, size);
-        Page<Article> result = articleMapper.selectPageWithCategory(pageParam, categoryId, tagId, articleType, status);
-
-        if (result != null && !result.getRecords().isEmpty()) {
-            List<Long> articleIds = result.getRecords().stream()
-                    .map(Article::getId)
-                    .collect(Collectors.toList());
-            List<Tag> allTags = tagMapper.selectByArticleIds(articleIds);
-            Map<Long, List<Tag>> tagMap = allTags.stream()
-                    .collect(Collectors.groupingBy(Tag::getArticleId));
-            for (Article article : result.getRecords()) {
-                article.setTags(tagMap.getOrDefault(article.getId(), Collections.emptyList()));
-            }
-        }
+        Page<com.blog.vo.ArticleSummary> pageParam = new Page<>(page, size);
+        Page<com.blog.vo.ArticleSummary> result = articleMapper.selectPageSummary(pageParam, categoryId, tagId, articleType, status);
 
         redisCache.set(cacheKey, result, CACHE_TTL, TimeUnit.MINUTES);
         log.debug("Article list cached: {}", cacheKey);
