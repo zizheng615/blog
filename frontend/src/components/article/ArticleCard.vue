@@ -15,14 +15,15 @@
       <p class="summary">{{ article.summary }}</p>
       <div class="footer">
         <div class="tags">
-          <span
+          <a
             v-for="tag in article.tags"
             :key="tag.id"
             class="tag"
             :style="tagStyle(tag.color)"
+            @click.prevent.stop="goToTag(tag.id)"
           >
             #{{ tag.name }}
-          </span>
+          </a>
         </div>
         <div class="stats">
           <span><el-icon class="icon-glow-blue"><View /></el-icon> {{ article.viewCount || 0 }}</span>
@@ -35,11 +36,14 @@
 
 <script setup>
 import dayjs from 'dayjs'
+import { useRouter } from 'vue-router'
 import { readableColor, rgbaBg } from '@/utils/color'
 
 const props = defineProps({
   article: { type: Object, required: true }
 })
+
+const router = useRouter()
 
 const formatDate = (date) => {
   return date ? dayjs(date).format('YYYY-MM-DD') : ''
@@ -49,6 +53,10 @@ const tagStyle = (color) => ({
   color: readableColor(color),
   backgroundColor: rgbaBg(color, 0.14),
 })
+
+const goToTag = (tagId) => {
+  router.push({ path: '/articles', query: { tagId } })
+}
 </script>
 
 <style lang="scss" scoped>
