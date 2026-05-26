@@ -35,7 +35,7 @@
             class="tag-item"
             :style="tagStyle(tag.color)"
           >
-            {{ tag.name }}
+            #{{ tag.name }}
             <span class="tag-count">{{ tag.articleCount || 0 }}</span>
           </router-link>
         </div>
@@ -188,18 +188,19 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 12px;
+  padding: 3px 10px;
   border-radius: 0;
   font-size: 0.82em;
   font-weight: 500;
   letter-spacing: 0.4px;
-  border: 1px solid;
+  border: none;
   transition: all 0.2s ease;
   line-height: 1.4;
+  opacity: 0.82;
 
   &:hover {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.04);
+    filter: brightness(0.92);
   }
 }
 

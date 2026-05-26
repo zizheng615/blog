@@ -918,21 +918,21 @@ onUnmounted(() => {
   padding: 0 32px 18px;
 
   .tag {
-    font-size: 0.85em;
+    font-size: 0.82em;
     font-weight: 500;
     letter-spacing: 0.4px;
-    padding: 4px 12px;
+    padding: 3px 10px;
     border-radius: 0;
     text-decoration: none;
     transition: all 0.2s ease;
     cursor: pointer;
-    border: 1px solid currentColor;
-    opacity: 0.8;
+    border: none;
+    opacity: 0.82;
     line-height: 1.4;
 
     &:hover {
       opacity: 1;
-      background: rgba(0, 0, 0, 0.04);
+      filter: brightness(0.92);
     }
   }
 }

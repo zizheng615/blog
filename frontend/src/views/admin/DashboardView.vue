@@ -34,7 +34,7 @@
               class="admin-tag"
               :style="tagStyle(tag.color)"
             >
-              {{ tag.name }}
+              #{{ tag.name }}
             </span>
             <span v-if="!row.tags?.length" class="no-tag">-</span>
           </div>
@@ -77,7 +77,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
-import { getAdminArticles, deleteArticle } from '@/api/article'
+import { getAdminArticles, deleteArticle, getArticleById } from '@/api/article'
 import { getCategories } from '@/api/category'
 import { getTags } from '@/api/tag'
 import { readableColor, rgbaBg } from '@/utils/color'
@@ -114,8 +114,18 @@ const loadMeta = async () => {
   }
 }
 
-const openEditor = (article = null) => {
-  editorRef.value?.open(article)
+const openEditor = async (article = null) => {
+  if (article) {
+    // ArticleSummary 缺少 content 大字段，需获取完整文章数据
+    try {
+      const fullArticle = await getArticleById(article.id)
+      editorRef.value?.open(fullArticle)
+    } catch (e) {
+      ElMessage.error('获取文章详情失败')
+    }
+  } else {
+    editorRef.value?.open()
+  }
 }
 
 const onTagsUpdated = () => {
@@ -139,15 +149,15 @@ const formatDate = (date) => {
 
 const tagStyle = (color) => ({
   color: readableColor(color),
-  backgroundColor: rgbaBg(color, 0.12),
-  border: `1px solid ${color || '#dcdfe6'}`,
+  backgroundColor: rgbaBg(color, 0.14),
+  border: 'none',
   borderRadius: '0',
-  padding: '1px 8px',
+  padding: '2px 10px',
   fontSize: '0.75em',
   fontWeight: 500,
   letterSpacing: '0.4px',
   lineHeight: '1.5',
-  opacity: 0.8,
+  opacity: 0.82,
 })
 
 onMounted(() => {
@@ -192,8 +202,13 @@ onMounted(() => {
 
 .admin-tag {
   display: inline-block;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
+
+  &:hover {
+    opacity: 1;
+    filter: brightness(0.92);
+  }
 }
 
 .no-tag {

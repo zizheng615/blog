@@ -108,11 +108,31 @@
               type="info"
               plain
               @click="appendHtmlToMd"
-              :disabled="!form.content || form.content === '<p><br></p>'"
+              :disabled="!form.content || form.content === '<p><br></p>' || !!mdOperationType"
             >
               追加到 Markdown
             </el-button>
-            <span class="editor-footer-hint">将富文本内容转换为 Markdown 并追加到 Markdown 编辑器</span>
+            <el-button
+              size="small"
+              type="warning"
+              plain
+              @click="coverHtmlToMd"
+              :disabled="!form.content || form.content === '<p><br></p>' || !!mdOperationType"
+            >
+              覆盖 Markdown
+            </el-button>
+            <el-button
+              v-if="mdOperationType"
+              size="small"
+              @click="cancelMdOperation"
+            >
+              取消
+            </el-button>
+            <span class="editor-footer-hint">
+              {{ mdOperationType === 'append' ? '已追加到 Markdown，可点击取消恢复' :
+                 mdOperationType === 'cover' ? '已覆盖 Markdown，可点击取消恢复' :
+                 '追加：保留原 MD 并追加内容；覆盖：用富文本替换 MD 内容' }}
+            </span>
           </div>
         </div>
         <div v-else class="markdown-wrapper">
@@ -526,7 +546,10 @@ const onEditorCreated = (editor) => {
 
 onBeforeUnmount(() => {
   const editor = editorRef.value
-  if (editor) editor.destroy()
+  if (editor) {
+    editor.destroy()
+    editorRef.value = null
+  }
 })
 
 const form = reactive({
@@ -550,6 +573,10 @@ const mdImageInputRef = ref(null)
 const mdImageUploading = ref(false)
 const mdVideoInputRef = ref(null)
 const mdVideoUploading = ref(false)
+
+// Markdown 操作快照：追加/覆盖前保存原始 contentMd，用于取消操作
+const contentMdSnapshot = ref('')
+const mdOperationType = ref('') // 'append' | 'cover' | ''
 
 const markdownPreview = computed(() => {
   if (form.editorMode !== 'MARKDOWN' || !form.contentMd) return ''
@@ -787,18 +814,64 @@ const appendHtmlToMd = () => {
     ElMessage.warning('无可转换的内容')
     return
   }
+  // 首次操作时保存快照
+  if (!mdOperationType.value) {
+    contentMdSnapshot.value = form.contentMd || ''
+  }
   const prefix = form.contentMd ? '\n\n' : ''
   form.contentMd = (form.contentMd || '') + prefix + md
+  mdOperationType.value = 'append'
   ElMessage.success('已追加到 Markdown 编辑器')
 }
 
+const coverHtmlToMd = async () => {
+  const html = editorRef.value?.getHtml() || form.content
+  if (!html || html === '<p><br></p>') {
+    ElMessage.warning('富文本编辑器暂无内容')
+    return
+  }
+  const md = htmlToMarkdown(html)
+  if (!md.trim()) {
+    ElMessage.warning('无可转换的内容')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      '确定用富文本内容覆盖 Markdown 编辑器的内容吗？此操作可通过「取消」按钮恢复。',
+      '覆盖确认',
+      { confirmButtonText: '覆盖', cancelButtonText: '取消', type: 'warning' }
+    )
+    // 首次操作时保存快照
+    if (!mdOperationType.value) {
+      contentMdSnapshot.value = form.contentMd || ''
+    }
+    form.contentMd = md
+    mdOperationType.value = 'cover'
+    ElMessage.success('已覆盖 Markdown 内容')
+  } catch (e) {
+    // 用户取消确认，不执行任何操作
+  }
+}
+
+const cancelMdOperation = () => {
+  if (mdOperationType.value) {
+    form.contentMd = contentMdSnapshot.value
+    contentMdSnapshot.value = ''
+    mdOperationType.value = ''
+    ElMessage.success('已取消操作，恢复原始 Markdown 内容')
+  }
+}
+
 const open = (article = null) => {
+  // 重置 Markdown 操作状态
+  contentMdSnapshot.value = ''
+  mdOperationType.value = ''
+
   isEdit.value = !!article
   if (article) {
     Object.assign(form, article)
     form.tagIds = article.tags?.map(t => t.id) || []
     form.contentMd = article.contentMd || ''
-    // 如果文章同时有 HTML 和 MD 内容，优先按用户最后编辑的模式打开
     // 若 contentMd 非空则开 MD 模式，否则开 HTML 模式
     form.editorMode = article.contentMd ? 'MARKDOWN' : 'HTML'
   } else {

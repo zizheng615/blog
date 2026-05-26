@@ -21,7 +21,7 @@
             class="tag"
             :style="tagStyle(tag.color)"
           >
-            {{ tag.name }}
+            #{{ tag.name }}
           </span>
         </div>
         <div class="stats">
@@ -195,14 +195,14 @@ const tagStyle = (color) => ({
   letter-spacing: 0.4px;
   padding: 3px 10px;
   border-radius: 0;
-  border: 1px solid currentColor;
-  opacity: 0.72;
+  border: none;
+  opacity: 0.82;
   transition: all 0.2s ease;
   line-height: 1.4;
 
   &:hover {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.04);
+    filter: brightness(0.92);
   }
 }
 
