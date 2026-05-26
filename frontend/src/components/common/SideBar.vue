@@ -188,15 +188,18 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.85em;
+  padding: 5px 12px;
+  border-radius: 0;
+  font-size: 0.82em;
+  font-weight: 500;
+  letter-spacing: 0.4px;
   border: 1px solid;
-  transition: all 0.3s;
+  transition: all 0.2s ease;
+  line-height: 1.4;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.04);
   }
 }
 

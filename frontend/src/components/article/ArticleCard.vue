@@ -190,9 +190,20 @@ const tagStyle = (color) => ({
 }
 
 .tag {
-  font-size: 0.8em;
-  padding: 2px 8px;
-  border-radius: 4px;
+  font-size: 0.72em;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  padding: 3px 10px;
+  border-radius: 0;
+  border: 1px solid currentColor;
+  opacity: 0.72;
+  transition: all 0.2s ease;
+  line-height: 1.4;
+
+  &:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.04);
+  }
 }
 
 .stats {

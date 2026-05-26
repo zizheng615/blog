@@ -102,6 +102,18 @@
             class="editor-body"
             @onCreated="onEditorCreated"
           />
+          <div class="editor-footer-bar">
+            <el-button
+              size="small"
+              type="info"
+              plain
+              @click="appendHtmlToMd"
+              :disabled="!form.content || form.content === '<p><br></p>'"
+            >
+              追加到 Markdown
+            </el-button>
+            <span class="editor-footer-hint">将富文本内容转换为 Markdown 并追加到 Markdown 编辑器</span>
+          </div>
         </div>
         <div v-else class="markdown-wrapper">
           <div class="markdown-edit-pane">
@@ -380,6 +392,7 @@ const loading = ref(false)
 const isEdit = ref(false)
 const formRef = ref()
 const editorRef = shallowRef()
+const pendingHtmlContent = ref('')
 
 const localTags = ref([])
 const newTagName = ref('')
@@ -505,6 +518,10 @@ const editorConfig = {
 
 const onEditorCreated = (editor) => {
   editorRef.value = editor
+  if (pendingHtmlContent.value) {
+    editor.setHtml(pendingHtmlContent.value)
+    pendingHtmlContent.value = ''
+  }
 }
 
 onBeforeUnmount(() => {
@@ -620,6 +637,19 @@ const onMdVideoSelected = async (e) => {
   }
 }
 
+watch(() => form.editorMode, (mode) => {
+  if (mode === 'HTML') {
+    pendingHtmlContent.value = form.content || ''
+    nextTick(() => {
+      const editor = editorRef.value
+      if (editor && pendingHtmlContent.value) {
+        editor.setHtml(pendingHtmlContent.value)
+        pendingHtmlContent.value = ''
+      }
+    })
+  }
+})
+
 watch(markdownPreview, () => {
   if (!markdownPreviewRef.value) return
   nextTick(() => {
@@ -643,12 +673,133 @@ watch(markdownPreview, () => {
   })
 })
 
+const htmlToMarkdown = (html) => {
+  if (!html) return ''
+  let md = html
+
+  // Code blocks (handle before inline code)
+  md = md.replace(/<pre[^>]*>\s*<code[^>]*(?:class="language-([^"]*)")?[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi, (match, lang, code) => {
+    const decoded = code
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+    return '```' + (lang || '') + '\n' + decoded + '\n```\n\n'
+  })
+
+  // Headers
+  md = md.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '# $1\n\n')
+  md = md.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, '## $1\n\n')
+  md = md.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, '### $1\n\n')
+  md = md.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, '#### $1\n\n')
+  md = md.replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, '##### $1\n\n')
+  md = md.replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, '###### $1\n\n')
+
+  // Bold / Italic
+  md = md.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/\1>/gi, '**$2**')
+  md = md.replace(/<(em|i)[^>]*>([\s\S]*?)<\/\1>/gi, '*$2*')
+
+  // Inline code
+  md = md.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, (match, code) => {
+    const decoded = code.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+    return '`' + decoded + '`'
+  })
+
+  // Strikethrough
+  md = md.replace(/<del[^>]*>([\s\S]*?)<\/del>/gi, '~~$1~~')
+  md = md.replace(/<s[^>]*>([\s\S]*?)<\/s>/gi, '~~$1~~')
+
+  // Links
+  md = md.replace(/<a[^>]+href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)')
+
+  // Images
+  md = md.replace(/<img[^>]+src="([^"]*)"[^>]*alt="([^"]*)"[^>]*\/?>/gi, '![$2]($1)')
+  md = md.replace(/<img[^>]+alt="([^"]*)"[^>]*src="([^"]*)"[^>]*\/?>/gi, '![$1]($2)')
+  md = md.replace(/<img[^>]+src="([^"]*)"[^>]*\/?>/gi, '![]($1)')
+
+  // Unordered lists
+  md = md.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (match, content) => {
+    const items = content.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || []
+    return items.map(item => {
+      const text = item.replace(/<li[^>]*>([\s\S]*?)<\/li>/i, '$1')
+      return '- ' + text.trim() + '\n'
+    }).join('') + '\n'
+  })
+
+  // Ordered lists
+  md = md.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (match, content) => {
+    const items = content.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || []
+    return items.map((item, idx) => {
+      const text = item.replace(/<li[^>]*>([\s\S]*?)<\/li>/i, '$1')
+      return (idx + 1) + '. ' + text.trim() + '\n'
+    }).join('') + '\n'
+  })
+
+  // Blockquote
+  md = md.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (match, content) => {
+    const text = content.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, '$1').trim()
+    return text.split('\n').map(line => '> ' + line).join('\n') + '\n\n'
+  })
+
+  // Horizontal rule
+  md = md.replace(/<hr\s*\/?>/gi, '\n---\n\n')
+
+  // Paragraphs
+  md = md.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, '$1\n\n')
+
+  // Line breaks
+  md = md.replace(/<br\s*\/?>/gi, '\n')
+
+  // Table rows (basic)
+  md = md.replace(/<tr[^>]*>([\s\S]*?)<\/tr>/gi, (match, content) => {
+    const cells = content.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || []
+    const texts = cells.map(c => c.replace(/<\/?t[dh][^>]*>/g, '').trim())
+    return '| ' + texts.join(' | ') + ' |\n'
+  })
+
+  // Strip remaining tags but preserve line breaks from block elements
+  md = md.replace(/<\/?(div|section|article|aside|header|footer|main|nav)[^>]*>/gi, '\n')
+  md = md.replace(/<[^>]+>/g, '')
+
+  // Decode HTML entities
+  md = md
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+
+  // Clean up whitespace
+  md = md.replace(/\n{3,}/g, '\n\n').trim()
+
+  return md
+}
+
+const appendHtmlToMd = () => {
+  const html = editorRef.value?.getHtml() || form.content
+  if (!html || html === '<p><br></p>') {
+    ElMessage.warning('富文本编辑器暂无内容')
+    return
+  }
+  const md = htmlToMarkdown(html)
+  if (!md.trim()) {
+    ElMessage.warning('无可转换的内容')
+    return
+  }
+  const prefix = form.contentMd ? '\n\n' : ''
+  form.contentMd = (form.contentMd || '') + prefix + md
+  ElMessage.success('已追加到 Markdown 编辑器')
+}
+
 const open = (article = null) => {
   isEdit.value = !!article
   if (article) {
     Object.assign(form, article)
     form.tagIds = article.tags?.map(t => t.id) || []
     form.contentMd = article.contentMd || ''
+    // 如果文章同时有 HTML 和 MD 内容，优先按用户最后编辑的模式打开
+    // 若 contentMd 非空则开 MD 模式，否则开 HTML 模式
     form.editorMode = article.contentMd ? 'MARKDOWN' : 'HTML'
   } else {
     Object.assign(form, {
@@ -663,6 +814,17 @@ const open = (article = null) => {
   editorConfig.MENU_CONF.uploadImage.headers = uploadHeaders()
   editorConfig.MENU_CONF.uploadVideo.headers = uploadHeaders()
   visible.value = true
+
+  // 富文本编辑器回显：destroy-on-close 后组件重新创建，v-model 不保证生效
+  // 方案：若 editor 已创建则直接 setHtml，否则在 onEditorCreated 中消费 pendingHtmlContent
+  pendingHtmlContent.value = form.content || ''
+  nextTick(() => {
+    const editor = editorRef.value
+    if (editor && pendingHtmlContent.value) {
+      editor.setHtml(pendingHtmlContent.value)
+      pendingHtmlContent.value = ''
+    }
+  })
 }
 
 const submit = async () => {
@@ -678,12 +840,10 @@ const submit = async () => {
     data.republish = data.republish === true
     data.tags = form.tagIds.map(id => ({ id }))
     if (form.editorMode === 'MARKDOWN') {
-      // Convert markdown to HTML server-side so detail view can render via v-html;
-      // keep raw md in contentMd for re-editing.
+      // Markdown 模式：渲染 HTML 用于展示，保留原始 Markdown 用于再次编辑
       data.content = mdParser.render(form.contentMd || '')
-    } else {
-      data.contentMd = ''
     }
+    // HTML 模式：直接保存 HTML content，contentMd 保留原值（不清空）
     delete data.editorMode
     if (isEdit.value) {
       await updateArticle(form.id, data)
@@ -723,6 +883,21 @@ defineExpose({ open })
   height: 400px;
   overflow-y: auto;
   border-radius: 0 0 4px 4px;
+}
+
+.editor-footer-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #fafbfc;
+  border-top: 1px solid #e4e7ed;
+  border-radius: 0 0 4px 4px;
+}
+
+.editor-footer-hint {
+  font-size: 0.78em;
+  color: #909399;
 }
 
 .markdown-wrapper {

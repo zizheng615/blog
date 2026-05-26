@@ -55,6 +55,18 @@ public class ArticleServiceImpl implements ArticleService {
         Page<com.blog.vo.ArticleSummary> pageParam = new Page<>(page, size);
         Page<com.blog.vo.ArticleSummary> result = articleMapper.selectPageSummary(pageParam, categoryId, tagId, articleType, status);
 
+        if (result != null && !result.getRecords().isEmpty()) {
+            List<Long> articleIds = result.getRecords().stream()
+                    .map(com.blog.vo.ArticleSummary::getId)
+                    .collect(Collectors.toList());
+            List<Tag> allTags = tagMapper.selectByArticleIds(articleIds);
+            Map<Long, List<Tag>> tagMap = allTags.stream()
+                    .collect(Collectors.groupingBy(Tag::getArticleId));
+            for (com.blog.vo.ArticleSummary article : result.getRecords()) {
+                article.setTags(tagMap.getOrDefault(article.getId(), Collections.emptyList()));
+            }
+        }
+
         redisCache.set(cacheKey, result, CACHE_TTL, TimeUnit.MINUTES);
         log.debug("Article list cached: {}", cacheKey);
         return result;

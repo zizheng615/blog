@@ -1,9 +1,11 @@
 package com.blog.vo;
 
 import com.blog.entity.Category;
+import com.blog.entity.Tag;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 文章列表专用 VO，排除 content/contentMd 大字段，减少网络传输和内存占用。
@@ -30,4 +32,7 @@ public class ArticleSummary {
 
     /** 关联分类，列表展示用 */
     private Category category;
+
+    /** 关联标签，列表展示用 */
+    private List<Tag> tags;
 }

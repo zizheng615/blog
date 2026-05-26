@@ -25,6 +25,21 @@
         </template>
       </el-table-column>
       <el-table-column prop="viewCount" label="浏览" width="80" />
+      <el-table-column label="标签" min-width="160">
+        <template #default="{ row }">
+          <div class="admin-tag-list">
+            <span
+              v-for="tag in row.tags"
+              :key="tag.id"
+              class="admin-tag"
+              :style="tagStyle(tag.color)"
+            >
+              {{ tag.name }}
+            </span>
+            <span v-if="!row.tags?.length" class="no-tag">-</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="发布时间" width="160">
         <template #default="{ row }">
           {{ formatDate(row.publishedAt) }}
@@ -65,6 +80,7 @@ import dayjs from 'dayjs'
 import { getAdminArticles, deleteArticle } from '@/api/article'
 import { getCategories } from '@/api/category'
 import { getTags } from '@/api/tag'
+import { readableColor, rgbaBg } from '@/utils/color'
 import ArticleEditor from '@/components/admin/ArticleEditor.vue'
 
 const articles = ref([])
@@ -121,6 +137,19 @@ const formatDate = (date) => {
   return date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'
 }
 
+const tagStyle = (color) => ({
+  color: readableColor(color),
+  backgroundColor: rgbaBg(color, 0.12),
+  border: `1px solid ${color || '#dcdfe6'}`,
+  borderRadius: '0',
+  padding: '1px 8px',
+  fontSize: '0.75em',
+  fontWeight: 500,
+  letterSpacing: '0.4px',
+  lineHeight: '1.5',
+  opacity: 0.8,
+})
+
 onMounted(() => {
   loadArticles()
   loadMeta()
@@ -153,6 +182,23 @@ onMounted(() => {
   margin-top: 24px;
   display: flex;
   justify-content: center;
+}
+
+.admin-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-tag {
+  display: inline-block;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+.no-tag {
+  color: #c0c4cc;
+  font-size: 0.9em;
 }
 
 @media (max-width: 768px) {
