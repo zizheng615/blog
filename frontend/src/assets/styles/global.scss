@@ -27,10 +27,11 @@ body {
 .article-tech {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-  h1, h2, h3, h4 {
+  h1, h2, h3, h4, h5, h6 {
     color: #1a1a2e;
     margin: 1.5em 0 0.8em;
     font-weight: 600;
+    border: none;
   }
 
   h1 { font-size: 2em; }
@@ -41,6 +42,7 @@ body {
     margin: 1em 0;
     color: #4a5568;
     line-height: 1.8;
+    border: none;
   }
 
   code {
@@ -120,6 +122,12 @@ body {
     border-radius: 0 8px 8px 0;
     color: #4a5568;
   }
+
+  hr {
+    border: none;
+    border-top: 1px solid #e8eaed;
+    margin: 1.5em 0;
+  }
 }
 
 // Video and iframe styles (shared by both article types)
@@ -162,10 +170,18 @@ body {
 @media (max-width: 768px) {
   .article-tech,
   .article-life {
-    h1 { font-size: 1.5em; margin: 1.2em 0 0.6em; }
-    h2 { font-size: 1.25em; padding-bottom: 0.25em; margin: 1.2em 0 0.6em; }
-    h3 { font-size: 1.1em; margin: 1.2em 0 0.6em; }
-    h4 { font-size: 1em; margin: 1.2em 0 0.6em; }
+    h1, h2, h3, h4, h5, h6 {
+      border: none;
+      margin: 1.2em 0 0.6em;
+    }
+    h1 { font-size: 1.5em; }
+    h2 { font-size: 1.25em; }
+    h3 { font-size: 1.1em; }
+    h4 { font-size: 1em; }
+
+    p {
+      border: none;
+    }
 
     p {
       font-size: 1em;
@@ -236,11 +252,12 @@ body {
 .article-life {
   font-family: 'Georgia', 'Times New Roman', serif;
 
-  h1, h2, h3 {
+  h1, h2, h3, h4, h5, h6 {
     color: #2d3748;
     margin: 1.8em 0 1em;
     font-weight: 500;
     letter-spacing: -0.02em;
+    border: none;
   }
 
   h1 { font-size: 2.2em; }
@@ -252,6 +269,7 @@ body {
     color: #4a5568;
     line-height: 2;
     font-size: 1.05em;
+    border: none;
   }
 
   code {
@@ -301,6 +319,12 @@ body {
     margin: 1.2em 0;
     border-radius: 0 8px 8px 0;
     color: #4a5568;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #f0e6ee;
+    margin: 1.5em 0;
   }
 }
 
