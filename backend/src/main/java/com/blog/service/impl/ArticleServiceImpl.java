@@ -131,7 +131,11 @@ public class ArticleServiceImpl implements ArticleService {
                 .eq(ArticleTag::getArticleId, article.getId()));
         saveArticleTags(article.getId(), tagIds);
         clearArticleCache();
-        redisCache.delete(ARTICLE_DETAIL_KEY + ":" + article.getId());
+        try {
+            redisCache.delete(ARTICLE_DETAIL_KEY + ":" + article.getId());
+        } catch (Exception e) {
+            log.warn("Redis detail cache delete failed for article {}: {}", article.getId(), e.getMessage());
+        }
         log.info("Article updated, cache cleared. id={}", article.getId());
         return article;
     }
@@ -156,11 +160,15 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     private void clearArticleCache() {
-        redisCache.deleteByPattern(ARTICLE_LIST_KEY + ":*");
-        redisCache.deleteByPattern(ARTICLE_SLUG_KEY + ":*");
-        redisCache.delete("tag:all");
-        redisCache.delete("category:all");
-        log.info("Article list, slug, tag, and category caches cleared");
+        try {
+            redisCache.deleteByPattern(ARTICLE_LIST_KEY + ":*");
+            redisCache.deleteByPattern(ARTICLE_SLUG_KEY + ":*");
+            redisCache.delete("tag:all");
+            redisCache.delete("category:all");
+            log.info("Article list, slug, tag, and category caches cleared");
+        } catch (Exception e) {
+            log.warn("Redis cache clear failed, continuing without cache eviction: {}", e.getMessage());
+        }
     }
 
     private void saveArticleTags(Long articleId, List<Long> tagIds) {

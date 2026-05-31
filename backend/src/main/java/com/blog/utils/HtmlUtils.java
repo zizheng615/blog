@@ -12,17 +12,18 @@ public class HtmlUtils {
 
     /**
      * 匹配并移除 &lt;script&gt;...&lt;/script&gt;（含内容和标签）。
-     * 支持跨行、标签内带属性。
+     * 使用惰性匹配，避免回溯灾难。
      */
     private static final Pattern SCRIPT_PATTERN = Pattern.compile(
-            "<script\\b[^<]*(?:(?!</script>)<[^<]*)*</script>",
+            "<script\\b[\\s\\S]*?</script>",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     /**
      * 匹配并移除 &lt;object&gt;...&lt;/object&gt;。
+     * 使用惰性匹配，避免回溯灾难。
      */
     private static final Pattern OBJECT_PATTERN = Pattern.compile(
-            "<object\\b[^<]*(?:(?!</object>)<[^<]*)*</object>",
+            "<object\\b[\\s\\S]*?</object>",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     /**
@@ -64,16 +65,25 @@ public class HtmlUtils {
         if (html == null || html.isEmpty()) {
             return html;
         }
+        // 超长内容截断处理，避免正则回溯导致线程挂起
+        if (html.length() > 5_000_000) {
+            html = html.substring(0, 5_000_000);
+        }
         String result = html;
         result = SCRIPT_PATTERN.matcher(result).replaceAll("");
         result = OBJECT_PATTERN.matcher(result).replaceAll("");
         // 循环处理直到没有匹配，依次处理双引号、单引号、无引号的事件属性
         String prev;
+        int iterations = 0;
+        final int maxIterations = 100;
         do {
             prev = result;
             result = EVENT_ATTR_DQ.matcher(result).replaceAll("$1$2");
             result = EVENT_ATTR_SQ.matcher(result).replaceAll("$1$2");
             result = EVENT_ATTR_NQ.matcher(result).replaceAll("$1$2");
+            if (++iterations > maxIterations) {
+                break; // 防止极端输入导致无限循环
+            }
         } while (!result.equals(prev));
         result = JS_PROTOCOL.matcher(result).replaceAll("");
         result = DATA_PROTOCOL.matcher(result).replaceAll("");
