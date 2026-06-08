@@ -2,12 +2,24 @@
   <div class="dashboard">
     <div class="page-header">
       <h2>文章管理</h2>
-      <el-button type="primary" @click="openEditor()">
-        <el-icon><Plus /></el-icon> 新建文章
-      </el-button>
+      <div class="header-actions">
+        <!-- 搜索面板：增量扩展 -->
+        <ArticleSearchPanel
+          v-model="search.keyword"
+          :loading="search.loading || loading"
+          :result-count="search.total"
+          :is-searching="search.isActive"
+          placeholder="搜索标题、摘要、内容..."
+          @search="search.onKeywordChange"
+          @clear="search.doClear"
+        />
+        <el-button type="primary" @click="openEditor()">
+          <el-icon><Plus /></el-icon> 新建文章
+        </el-button>
+      </div>
     </div>
 
-    <el-table :data="articles" v-loading="loading" stripe>
+    <el-table :data="displayArticles" v-loading="loading || search.loading" stripe>
       <el-table-column prop="id" label="ID" width="60" />
       <el-table-column prop="title" label="标题" min-width="200" />
       <el-table-column label="类型" width="100">
@@ -53,7 +65,18 @@
       </el-table-column>
     </el-table>
 
-    <div class="pagination" v-if="total > pageSize">
+    <!-- 搜索模式分页 -->
+    <div class="pagination" v-if="search.isActive && search.total > search.size">
+      <el-pagination
+        v-model:current-page="search.page"
+        :page-size="search.size"
+        :total="search.total"
+        layout="prev, pager, next"
+        @current-change="search.onPageChange"
+      />
+    </div>
+    <!-- 正常模式分页 -->
+    <div class="pagination" v-if="!search.isActive && total > pageSize">
       <el-pagination
         v-model:current-page="page"
         :page-size="pageSize"
@@ -74,15 +97,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { getAdminArticles, deleteArticle, getArticleById } from '@/api/article'
 import { getCategories } from '@/api/category'
 import { getTags } from '@/api/tag'
 import { readableColor, rgbaBg } from '@/utils/color'
+import { useArticleSearch } from '@/composables/useArticleSearch'
 import ArticleEditor from '@/components/admin/ArticleEditor.vue'
+import ArticleSearchPanel from '@/components/search/ArticleSearchPanel.vue'
 
+/* ---- 原有文章列表逻辑：零改动 ---- */
 const articles = ref([])
 const categories = ref([])
 const tags = ref([])
@@ -91,6 +117,18 @@ const page = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const editorRef = ref()
+
+/* ---- 搜索功能：纯增量扩展 ---- */
+const search = useArticleSearch({ pageSize: 10, status: '' })
+
+/** 表格展示数据源：搜索模式用搜索结果，正常模式用原列表 */
+const displayArticles = computed(() => {
+  return search.isActive.value ? search.results.value : articles.value
+})
+
+const displayTotal = computed(() => {
+  return search.isActive.value ? search.total.value : total.value
+})
 
 const loadArticles = async () => {
   loading.value = true
@@ -186,6 +224,13 @@ onMounted(() => {
     font-weight: 600;
     color: #2c3e50;
   }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .pagination {

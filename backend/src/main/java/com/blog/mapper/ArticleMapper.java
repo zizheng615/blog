@@ -32,6 +32,14 @@ public interface ArticleMapper extends BaseMapper<Article> {
                                                         @Param("articleType") String articleType,
                                                         @Param("status") String status);
 
+    /**
+     * 全文搜索文章：同时匹配标题、摘要、内容。
+     * 复用 SummaryResultMap 排除 content 大字段，列表查询性能与常规分页一致。
+     */
+    Page<com.blog.vo.ArticleSummary> searchArticles(Page<com.blog.vo.ArticleSummary> page,
+                                                       @Param("keyword") String keyword,
+                                                       @Param("status") String status);
+
     @Update("UPDATE article SET view_count = view_count + 1 WHERE id = #{id}")
     void incrementViewCount(@Param("id") Long id);
 

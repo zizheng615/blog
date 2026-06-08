@@ -159,6 +159,44 @@ public class ArticleServiceImpl implements ArticleService {
         return articleMapper.selectByTagId(tagId);
     }
 
+    /* ---- 全文搜索：增量扩展，不影响现有列表逻辑 ---- */
+    private static final String ARTICLE_SEARCH_KEY = "article:search";
+    private static final long SEARCH_CACHE_TTL = 5; // 搜索结果缓存 5 分钟
+
+    @Override
+    public Page<com.blog.vo.ArticleSummary> searchArticles(Integer page, Integer size, String keyword, String status) {
+        String searchStatus = status != null ? status : "PUBLISHED";
+        String cacheKey = String.format("%s:%d:%d:%s:%s",
+                ARTICLE_SEARCH_KEY, page, size, keyword, searchStatus);
+
+        @SuppressWarnings("unchecked")
+        Page<com.blog.vo.ArticleSummary> cached = redisCache.get(cacheKey);
+        if (cached != null) {
+            log.debug("Article search cache hit: {}", cacheKey);
+            return cached;
+        }
+
+        Page<com.blog.vo.ArticleSummary> pageParam = new Page<>(page, size);
+        Page<com.blog.vo.ArticleSummary> result = articleMapper.searchArticles(pageParam, keyword.trim(), searchStatus);
+
+        // 批量查询标签并关联，复用 listPage 的相同逻辑
+        if (result != null && !result.getRecords().isEmpty()) {
+            List<Long> articleIds = result.getRecords().stream()
+                    .map(com.blog.vo.ArticleSummary::getId)
+                    .collect(Collectors.toList());
+            List<Tag> allTags = tagMapper.selectByArticleIds(articleIds);
+            Map<Long, List<Tag>> tagMap = allTags.stream()
+                    .collect(Collectors.groupingBy(Tag::getArticleId));
+            for (com.blog.vo.ArticleSummary article : result.getRecords()) {
+                article.setTags(tagMap.getOrDefault(article.getId(), Collections.emptyList()));
+            }
+        }
+
+        redisCache.set(cacheKey, result, SEARCH_CACHE_TTL, TimeUnit.MINUTES);
+        log.debug("Article search cached: {}", cacheKey);
+        return result;
+    }
+
     private void clearArticleCache() {
         try {
             redisCache.deleteByPattern(ARTICLE_LIST_KEY + ":*");

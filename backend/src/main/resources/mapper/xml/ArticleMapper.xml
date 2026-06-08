@@ -122,4 +122,48 @@
         </where>
         ORDER BY a.published_at DESC
     </select>
+
+    <!--
+      全文搜索：同时匹配标题、摘要、内容。
+      复用 SummaryResultMap 排除 content 大字段，列表查询性能与常规分页一致。
+      前端输入已做基础 XSS 过滤，此处使用 MySQL LIKE 全模糊匹配。
+      注：数据量大时可迁移至 MySQL FULLTEXT 索引，本实现保持零侵入。
+    -->
+    <select id="searchArticles" resultMap="SummaryResultMap">
+        SELECT DISTINCT
+            a.id,
+            a.title,
+            a.slug,
+            a.summary,
+            a.content_md,
+            a.cover_image,
+            a.category_id,
+            a.author_id,
+            a.article_type,
+            a.status,
+            a.view_count,
+            a.comment_count,
+            a.is_top,
+            a.published_at,
+            a.created_at,
+            a.updated_at,
+            c.id as cat_id,
+            c.name as cat_name,
+            c.slug as cat_slug
+        FROM article a
+        LEFT JOIN category c ON a.category_id = c.id
+        <where>
+            <if test="status != null and status != ''">
+                AND a.status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    a.title LIKE CONCAT('%', #{keyword}, '%')
+                    OR a.summary LIKE CONCAT('%', #{keyword}, '%')
+                    OR a.content LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        ORDER BY a.published_at DESC
+    </select>
 </mapper>

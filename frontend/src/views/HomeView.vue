@@ -10,11 +10,51 @@
         </div>
         <div class="section-header">
           <h2>最新文章</h2>
-          <router-link to="/articles" class="more">查看全部 <el-icon class="icon-glow-purple"><ArrowRight /></el-icon></router-link>
+          <div class="section-actions">
+            <!-- 搜索面板：增量扩展，不影响原有列表 -->
+            <ArticleSearchPanel
+              v-model="search.keyword"
+              :loading="search.loading"
+              :result-count="search.total"
+              :is-searching="search.isActive"
+              @search="search.onKeywordChange"
+              @clear="search.doClear"
+            />
+            <router-link v-if="!search.isActive" to="/articles" class="more">查看全部 <el-icon class="icon-glow-purple"><ArrowRight /></el-icon></router-link>
+          </div>
         </div>
-        <div class="article-grid">
-          <ArticleCard v-for="article in articles" :key="article.id" :article="article" />
-        </div>
+
+        <!-- 搜索模式：渲染搜索结果 -->
+        <template v-if="search.isActive">
+          <div class="article-grid">
+            <ArticleCard
+              v-for="article in search.results"
+              :key="article.id"
+              :article="article"
+            />
+          </div>
+          <div v-if="search.total > search.size" class="pagination">
+            <el-pagination
+              v-model:current-page="search.page"
+              :page-size="search.size"
+              :total="search.total"
+              layout="prev, pager, next"
+              @current-change="search.onPageChange"
+            />
+          </div>
+          <div v-if="!search.loading && search.results.length === 0" class="empty-state">
+            <el-icon class="empty-icon"><Search /></el-icon>
+            <p>未找到与 "{{ search.keyword }}" 相关的文章</p>
+            <span class="empty-hint">请尝试其他关键词</span>
+          </div>
+        </template>
+
+        <!-- 正常模式：原有文章列表，逻辑零改动 -->
+        <template v-else>
+          <div class="article-grid">
+            <ArticleCard v-for="article in articles" :key="article.id" :article="article" />
+          </div>
+        </template>
       </div>
       <SideBar class="sidebar-area" />
     </div>
@@ -24,9 +64,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getArticles } from '@/api/article'
+import { useArticleSearch } from '@/composables/useArticleSearch'
 import ArticleCard from '@/components/article/ArticleCard.vue'
+import ArticleSearchPanel from '@/components/search/ArticleSearchPanel.vue'
 import SideBar from '@/components/common/SideBar.vue'
 
+/* ---- 原有文章列表逻辑：零改动 ---- */
 const articles = ref([])
 
 onMounted(async () => {
@@ -37,6 +80,9 @@ onMounted(async () => {
     console.error(e)
   }
 })
+
+/* ---- 搜索功能：纯增量扩展 ---- */
+const search = useArticleSearch({ pageSize: 6 })
 </script>
 
 <style lang="scss" scoped>

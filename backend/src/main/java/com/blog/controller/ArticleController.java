@@ -66,6 +66,26 @@ public class ArticleController {
         return Result.success(article);
     }
 
+    /**
+     * 全文搜索文章：同时匹配标题、摘要、内容。
+     * 默认只搜索已发布(PUBLISHED)文章，管理员可通过 status 参数覆盖。
+     */
+    @GetMapping("/articles/search")
+    public Result<Map<String, Object>> search(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam String keyword,
+            @RequestParam(required = false) String status) {
+        String searchStatus = status != null ? status : "PUBLISHED";
+        Page<com.blog.vo.ArticleSummary> articlePage = articleService.searchArticles(page, size, keyword.trim(), searchStatus);
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", articlePage.getRecords());
+        result.put("total", articlePage.getTotal());
+        result.put("page", (int) articlePage.getCurrent());
+        result.put("size", (int) articlePage.getSize());
+        return Result.success(result);
+    }
+
     // Admin endpoints
     @GetMapping("/admin/articles")
     public Result<Map<String, Object>> listAdmin(
